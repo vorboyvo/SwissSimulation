@@ -34,7 +34,7 @@ class Division:
                 self.team_list.append(TeamContext(Team(name="Team " + str(i), skill=skill)))
         # Skill style 2: Skills generated according to normal distribution
         elif skill_style == 2:
-            skill_list = generator.normal(0, 1, no_of_teams)
+            skill_list = generator.normal(0, 2, no_of_teams)
             for i in range(0, no_of_teams):
                 self.team_list.append(TeamContext(Team(name="Team " + str(i), skill=skill_list[i])))
         else:
@@ -73,10 +73,12 @@ class Division:
                 pairing[0] + my_match.get_home_result()
                 pairing[1] + my_match.get_away_result()
                 printed += " " + str(my_match)
-            print(printed)
+            #print(printed)
 
     def __str__(self):
-        returned = ""
-        for team in self.team_list:
+        teams_sorted = self.team_list.copy()
+        teams_sorted.sort(reverse=True)
+        returned = "Name,Skill,W,L,RW,RL,MP\n"
+        for team in teams_sorted:
             returned += str(team) + "\n"
         return returned
