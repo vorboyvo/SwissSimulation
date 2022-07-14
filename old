@@ -1,0 +1,27 @@
+        """
+            koth is a boolean value, taking on false if the match is stopwatch and true if the match is koth
+
+            The difference in skill (home - away) is how much more likely one team is to win a given round than the other.
+            Its absolute value will take on values between 0 and 6 almost all of the time, virtue of the normal distribution,
+            and it should be near impossible to take on values greater than 7.
+            Then, we treat:
+            - a skill difference of 0 to mean that each team has a 50% chance of winning each round
+            - a skill difference of 1 to mean that the home team has a 7/12 (48.33%) chance of winning each round, and
+              the away team has a 5/12 chance of winning each round
+            - a skill difference of -1 to mean the exact opposite - i.e. the home team has a 5/12 chance, the away team 7/12
+            - a skill difference of 2 to mean that the home team has an 8/12 (66.67%) chance of winning each round, and
+              the away team has a 4/12 = 1/3 chance of winning each round
+            - a skill difference of 3 to mean that the home team has a 9/12...
+            - In the general case, a skill difference of "n" to mean that the home team has a (6+n)/12 chance of winning each
+              round, where n ∈ [-6,6]
+            - If n < -6, treat it as if n = -6
+            - If n > 6, treat it as if n = 6
+
+            We run the match until we have a winner, i.e. at least one team has won 4 rounds on koth or 2 on stopwatch.
+        """
+        n = home_skill - away_skill
+        if n < -6:
+            n = -6
+        elif n > 6:
+            n = 6
+        home_win_chance = (6 + n) / 12
