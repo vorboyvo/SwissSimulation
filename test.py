@@ -8,7 +8,7 @@ my_list = ["a", "b", "c", "d", "e", "f", "g", "h"]
 #    print("Invite " + str(i) + " \n" +
 #    str(invite))
 
-advanced = Division(name="Advanced",team_list=None, no_of_teams=12, skill_style=0)
+advanced = Division(name="Advanced",team_list=None, no_of_teams=12, skill_style=1)
 advanced.swiss_run_matches()
 print("Swiss 12-team Advanced:")
 print(advanced)

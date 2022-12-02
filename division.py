@@ -53,7 +53,7 @@ class Division:
             week = []
             current_team_list = rotating_teams.copy()
             current_team_list.insert(0, fixed_team)
-            for j in range(0, 4):  # look I have a reason ok
+            for j in range(0, 4):
                 week.append((current_team_list[j], current_team_list[-j - 1]))
             temp = rotating_teams[0]
             rotating_teams.remove(temp)
@@ -70,15 +70,16 @@ class Division:
                 pairing[0] + my_match.get_home_result()
                 pairing[1] + my_match.get_away_result()
                 printed += " " + str(my_match)
-            #print(printed)
+            # print(printed)
 
-    def swiss_run_matches(self):
+    def deprecated_swiss_run_matches(self):
+
         teams_sorted = self.team_list.copy()
         # Run each week
         for week_no in range(7):
 
-            print ("============================================================")
-            print ("Creating schedule for week " + str(week_no))
+            print("============================================================")
+            print("Creating schedule for week " + str(week_no))
             print("============================================================")
             # Create this week's schedule
             schedule = []
@@ -97,7 +98,7 @@ class Division:
                     continue
 
                 for away_team in teams_sorted:
-                    print("Checking if " + str((home_team,away_team)) + " is a valid pairing")
+                    print("Checking if " + str((home_team, away_team)) + " is a valid pairing")
                     # Check if home is same as away
                     if home_team is away_team:
                         print("Home team and away team are identical")
@@ -109,14 +110,14 @@ class Division:
                         continue
 
                     # Check if home team has already played away team
-                    if away_team in teams_faced[home_team.team.name]:
+                    if away_team in home_team.teams_faced:
                         print(repr(home_team) + " has already played " + repr(away_team))
                         continue
 
                     schedule.append((home_team, away_team))
-                    print("Added " + str((home_team,away_team)) + " to schedule!")
-                    teams_faced[home_team.team.name].append(away_team)
-                    teams_faced[away_team.team.name].append(home_team)
+                    print("Added " + str((home_team, away_team)) + " to schedule!")
+                    home_team.teams_faced.append(away_team)
+                    away_team.teams_faced.append(home_team)
                     break
                 if not team_search_in_schedule(schedule, home_team):
                     print("Failed to add " + repr(home_team) + " to schedule!")
@@ -135,9 +136,44 @@ class Division:
 
             printed += "\nName,Skill,W,L,RW,RL,MP,IMP\n"
             for team in teams_sorted:
-                printed += str(team) + " Already faced " + str(teams_faced[team.team.name]) + "\n"
+                printed += str(team) + " Already faced " + str(team.teams_faced) + "\n"
 
             print(printed)
+
+    # DFS based algorithm to run Swiss matches
+    def swiss_run_matches(self):
+        teams_sorted = self.team_list.copy()
+        teams_sorted.sort(reverse=True)
+
+        def schedule_week(schedule):
+            for home_team in teams_sorted:
+                # print("------------------------------------------------------------")
+                # print("Attempting to add " + repr(home_team) + " to schedule!")
+                # print("Schedule so far: " + str(schedule))
+                if team_search_in_schedule(schedule, home_team):
+                    # print("Home team " + repr(home_team) + " is already on the schedule")
+                    continue
+                for away_team in teams_sorted:
+                    # print("Checking if " + str((home_team, away_team)) + " is a valid pairing")
+                    # Check if home is same as away
+                    if home_team is away_team:
+                        # print("Home team and away team are identical")
+                        continue
+                    # Check if away team is already in schedule - if so, go to next eligible away team
+                    if team_search_in_schedule(schedule, away_team):
+                        # print("Away team " + repr(away_team) + " is already on the schedule")
+                        continue
+                    # Check if home team has already played away team
+                    if away_team in home_team.teams_faced:
+                        # print(repr(home_team) + " has already played " + repr(away_team))
+                        continue
+                    # Add match
+                    # Adding to teams_faced will come later!
+                    schedule.append((home_team, away_team))
+                    print("Added " + str((home_team, away_team)) + " to schedule!")
+                    schedule_week(schedule.copy())
+
+        schedule_week([])
 
     def __str__(self):
         teams_sorted = self.team_list.copy()
@@ -146,6 +182,7 @@ class Division:
         for team in teams_sorted:
             returned += str(team) + "\n"
         return returned
+
 
 def team_search_in_schedule(schedule: list, searched: TeamContext):
     for matchup in schedule:

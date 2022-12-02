@@ -1,6 +1,7 @@
 from tfmatch import MatchResult
 from functools import total_ordering
 
+
 @total_ordering
 class Team:
     def __init__(self, name: str, skill: float):
@@ -18,6 +19,7 @@ class Team:
     def __eq__(self, other):
         return self.skill == other.skill
 
+
 @total_ordering
 class TeamContext:
     def __init__(self, team: Team):
@@ -32,6 +34,7 @@ class TeamContext:
         self.rounds_lost = 0
         self.match_points = 0
         self.inq_match_points = 0
+        self.teams_faced = []
 
     def __add__(self, other: MatchResult):
         self.wins += (1 if other.won else 0)
@@ -43,9 +46,9 @@ class TeamContext:
 
     # Returns, tab separated: name, skill, wins, losses, rounds won, rounds lost, match points, inq match points
     def __str__(self):
-        return self.team.name + "," + str(round(self.team.skill,3)) + "," + str(self.wins) + "," + str(self.losses)\
+        return self.team.name + "," + str(round(self.team.skill, 3)) + "," + str(self.wins) + "," + str(self.losses) \
                + "," + str(self.rounds_won) + "," + str(self.rounds_lost) + "," + str(self.match_points) + "," \
-               + str(round(self.inq_match_points,3))
+               + str(round(self.inq_match_points, 3))
 
     def __repr__(self):
         return self.team.name
