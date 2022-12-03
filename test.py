@@ -9,9 +9,11 @@ for number_of_matches in range(1, 16, 2):
     print(f"Swiss 16-team Main with {str(number_of_matches)} matches:")
     team_names = [team.team.name for team in main.team_list]
     team_skills = [team.team.skill for team in main.team_list]
-    team_match_points_normalized = [team.match_points / number_of_matches for team in main.team_list]
-    y = numpy.array(team_match_points_normalized)
-    x = numpy.array(team_skills)
+    team_match_points = [team.match_points for team in main.team_list]
+    team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
+    team_match_point_rank = [sorted(team_skills).index(team) for team in team_skills]
+    y = numpy.array(team_match_point_rank)
+    x = numpy.array(team_skill_rank)
     reg = scipy.stats.linregress(x, y)
     print(reg.slope)
 
@@ -20,8 +22,11 @@ main.rr_run_matches()
 print("RR 16-team Main with 15 matches:")
 team_names = [team.team.name for team in main.team_list]
 team_skills = [team.team.skill for team in main.team_list]
-team_match_points_normalized = [team.match_points / 15 for team in main.team_list]
-y = numpy.array(team_match_points_normalized)
-x = numpy.array(team_skills)
+team_match_points = [team.match_points for team in main.team_list]
+team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
+team_match_point_rank = [sorted(team_skills).index(team) for team in team_skills]
+y = numpy.array(team_match_point_rank)
+x = numpy.array(team_skill_rank)
 reg = scipy.stats.linregress(x, y)
 print(reg.slope)
+
