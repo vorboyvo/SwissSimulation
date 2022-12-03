@@ -20,6 +20,11 @@ class Team:
         return self.skill == other.skill
 
 
+class ByeTeam(Team):
+    def __init__(self):
+        super().__init__("Bye Week", -99999999)
+
+
 @total_ordering
 class TeamContext:
     def __init__(self, team: Team):
@@ -33,7 +38,6 @@ class TeamContext:
         self.rounds_won = 0
         self.rounds_lost = 0
         self.match_points = 0
-        self.inq_match_points = 0
         self.teams_faced = []
 
     def __add__(self, other: MatchResult):
@@ -42,13 +46,11 @@ class TeamContext:
         self.rounds_won += other.rounds_won
         self.rounds_lost += other.rounds_lost
         self.match_points += other.match_points
-        self.inq_match_points += other.inq_match_points
 
     # Returns, tab separated: name, skill, wins, losses, rounds won, rounds lost, match points, inq match points
     def __str__(self):
         return self.team.name + "," + str(round(self.team.skill, 3)) + "," + str(self.wins) + "," + str(self.losses) \
-               + "," + str(self.rounds_won) + "," + str(self.rounds_lost) + "," + str(self.match_points) + "," \
-               + str(round(self.inq_match_points, 3))
+               + "," + str(self.rounds_won) + "," + str(self.rounds_lost) + "," + str(self.match_points)
 
     def __repr__(self):
         return self.team.name
