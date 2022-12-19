@@ -9,6 +9,19 @@ from scipy.stats import ttest_ind, t
 
 from division import Division
 
+def get_distortions(number_of_matches):
+    main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1)
+    random.shuffle(main.team_list)
+    try:
+        main.swiss_run_matches(number_of_matches)
+    except Exception:  # Cope and seethe, PyCharm Professional
+        print("Fucked up!")
+        return None
+    team_skills = [team.team.skill for team in main.team_list]
+    team_match_points = [team.match_points for team in main.team_list]
+    team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
+    team_match_point_rank = [sorted(team_match_points).index(team) for team in team_match_points]
+    return list(map(operator.sub, team_skill_rank, team_match_point_rank))
 
 def measure_distortions_over_adding_matches():
     distortion_dicts = []
@@ -18,19 +31,7 @@ def measure_distortions_over_adding_matches():
         print(f"Running iteration {i}")
         for number_of_matches in range(5, 16, 1):
             print(f"Running Swiss division with {number_of_matches} matches")
-            main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1)
-            try:
-                main.swiss_run_matches(number_of_matches)
-            except Exception:  #Cope and seethe, PyCharm Professional
-                errors += 1
-                print("Fucked up!")
-                continue
-            team_names = [team.team.name for team in main.team_list]
-            team_skills = [team.team.skill for team in main.team_list]
-            team_match_points = [team.match_points for team in main.team_list]
-            team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
-            team_match_point_rank = [sorted(team_match_points).index(team) for team in team_match_points]
-            distortions = list(map(operator.sub, team_skill_rank, team_match_point_rank))
+            distortions = get_distortions(number_of_matches)
             distortion_dicts.append(
                 {"matches": number_of_matches, "distortions": sum([abs(distortion) for distortion in distortions])})
 
@@ -71,39 +72,18 @@ def measure_distortions_over_two_numbers_of_matches(first,second,iters):
     print(tt)
 
 def figure_out_what_is_wrong_with_the_means():
-    scores6 = []
-    scores7 = []
+    scores = []
+
     i = 0
-    print(",6 matches,6 matches v2")
+    print("stuff,overall avg,last 100 matches avg")
     while i <= 25003:
         i += 1
-        main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1)
-        random.shuffle(main.team_list)
-        try:
-            main.swiss_run_matches(6)
-        except Exception:  # Cope and seethe, PyCharm Professional
-            print("Fucked up!")
-            continue
-        team_skills = [team.team.skill for team in main.team_list]
-        team_match_points = [team.match_points for team in main.team_list]
-        team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
-        team_match_point_rank = [sorted(team_match_points).index(team) for team in team_match_points]
-        distortions = list(map(operator.sub, team_skill_rank, team_match_point_rank))
-        scores6.append(sum([abs(distortion) for distortion in distortions]))
-        main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1)
-        random.shuffle(main.team_list)
-        try:
-            main.swiss_run_matches(6)
-        except Exception:  # Cope and seethe, PyCharm Professional
-            print("Fucked up!")
-            continue
-        team_skills = [team.team.skill for team in main.team_list]
-        team_match_points = [team.match_points for team in main.team_list]
-        team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
-        team_match_point_rank = [sorted(team_match_points).index(team) for team in team_match_points]
-        distortions = list(map(operator.sub, team_skill_rank, team_match_point_rank))
-        scores7.append(sum([abs(distortion) for distortion in distortions]))
+
+        distortions = get_distortions(6)
+        scores.append(sum([abs(distortion) for distortion in distortions]))
+
+
         if i % 100 == 0:
-            print(i, format(statistics.mean(scores6), '.5f'), format(statistics.mean(scores7), '.5f'), sep=",")
+            print(i, format(statistics.mean(scores), '.5f'), format(statistics.mean(scores[-100:]), '.5f'), sep=",")
 
 figure_out_what_is_wrong_with_the_means()
