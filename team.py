@@ -56,21 +56,17 @@ class TeamContext:
         return self.team.name
 
     def __lt__(self, other):
-        try:
-            if self.wins < other.wins:
-                return True
-            elif self.rounds_won / self.rounds_lost < other.rounds_won / other.rounds_lost:
-                return True
-            else:
-                return False
-        except ZeroDivisionError:
-            if self.rounds_lost <= other.rounds_lost:
-                return False
-            else:
-                return True
+        if not self.match_points == other.match_points:
+            return self.match_points < other.match_points
+        # Tiebreak by Median Buchholz
+        median_buchholz = 0
+        max_value = 0
+        min_value = 999999 #Really Big Number
+        for team in self.teams_faced:
+            median_buchholz += team.match_points
+            max_value = max(max_value, team.match_points)
+            min_value = min(min_value, team.match_points)
+        median_buchholz -= max_value
+        median_buchholz -= min_value
+        return max(median_buchholz, 0)
 
-    """def __eq__(self, other):
-        try:
-            return self.wins == other.wins and self.rounds_won/self.rounds_lost == other.rounds_won/other.rounds_lost
-        except ZeroDivisionError:
-            return True if self.rounds_lost == 0 and other.rounds_lost == 0 else False"""

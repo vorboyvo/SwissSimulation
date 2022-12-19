@@ -1,32 +1,15 @@
-import numpy
-import scipy
+from team import Team
+from tfmatch import Match
 
-from division import Division
+home = Team("Good team",0.25)
+away = Team("Open shitters",-0.25)
 
-for number_of_matches in range(1, 16, 2):
-    main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1)
-    main.swiss_run_matches(number_of_matches)
-    print(f"Swiss 16-team Main with {str(number_of_matches)} matches:")
-    team_names = [team.team.name for team in main.team_list]
-    team_skills = [team.team.skill for team in main.team_list]
-    team_match_points = [team.match_points for team in main.team_list]
-    team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
-    team_match_point_rank = [sorted(team_skills).index(team) for team in team_skills]
-    y = numpy.array(team_match_point_rank)
-    x = numpy.array(team_skill_rank)
-    reg = scipy.stats.linregress(x, y)
-    print(reg.slope)
+home_rounds = 0
+away_rounds = 0
 
-main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1)
-main.rr_run_matches()
-print("RR 16-team Main with 15 matches:")
-team_names = [team.team.name for team in main.team_list]
-team_skills = [team.team.skill for team in main.team_list]
-team_match_points = [team.match_points for team in main.team_list]
-team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
-team_match_point_rank = [sorted(team_skills).index(team) for team in team_skills]
-y = numpy.array(team_match_point_rank)
-x = numpy.array(team_skill_rank)
-reg = scipy.stats.linregress(x, y)
-print(reg.slope)
+for i in range(500):
+    match = Match(home_skill=home.skill,away_skill=away.skill,koth=True)
+    home_rounds += match.home_rounds_won
+    away_rounds += match.away_rounds_won
 
+print(home_rounds/(home_rounds+away_rounds))

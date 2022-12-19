@@ -16,7 +16,9 @@ class Match:
 
             We run the match until we have a winner, i.e. at least one team has won 4 rounds on koth or 2 on stopwatch.
         """
-        n = home_skill - away_skill
+        home_match_skill = home_skill #numpy.random.normal(home_skill, 0.1)
+        away_match_skill = away_skill #numpy.random.normal(away_skill, 0.1)
+        n = home_match_skill - away_match_skill
         home_win_chance = 1 / (1 + numpy.exp(-2 * n))
 
         # Run first to 4 on koth or 2 on stopwatch
@@ -29,6 +31,40 @@ class Match:
         away_rounds_won = 0
         while home_rounds_won < winlimit and away_rounds_won < winlimit:
             round_outcome = run_round(home_win_chance)
+            if round_outcome:
+                home_rounds_won += 1
+            else:
+                away_rounds_won += 1
+
+        # Treat stopwatch rounds as 2 each
+        if not koth:
+            home_rounds_won *= 2
+            away_rounds_won *= 2
+
+        self.home_rounds_won = home_rounds_won
+        self.away_rounds_won = away_rounds_won
+        self.winner = True if home_rounds_won > away_rounds_won else False  # Winner is TRUE if home wins, FALSE
+        # otherwise
+        self.home_match_points, self.away_match_points = get_match_points(self.home_rounds_won, self.away_rounds_won)
+        self.home_inq_match_points, self.away_inq_match_points = get_inq_match_points(self.home_rounds_won,
+                                                                                      self.away_rounds_won)
+
+        self.home_match_result = MatchResult(self.winner, self.home_rounds_won, self.away_rounds_won,
+                                             self.home_match_points, self.home_inq_match_points)
+        self.away_match_result = MatchResult(not self.winner, self.away_rounds_won, self.home_rounds_won,
+                                             self.away_match_points, self.away_inq_match_points)
+
+    def all_or_nothing__init__(self, home_skill: float, away_skill: float, koth: bool):
+        # Run first to 4 on koth or 2 on stopwatch
+        if koth:
+            winlimit = 4
+        else:
+            winlimit = 2
+
+        home_rounds_won = 0
+        away_rounds_won = 0
+        while home_rounds_won < winlimit and away_rounds_won < winlimit:
+            round_outcome = home_skill > away_skill
             if round_outcome:
                 home_rounds_won += 1
             else:
@@ -72,6 +108,10 @@ class MatchResult:
 
 
 def run_round(home_win_chance):
+    """ Run a round
+    :param home_win_chance: Home's chance to win
+    :return: True if home wins, False if away wins
+    """
     return randrange(100) < home_win_chance * 100
 
 

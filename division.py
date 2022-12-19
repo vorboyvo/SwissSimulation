@@ -1,11 +1,16 @@
+import builtins
+import datetime
+import sys
+
 from numpy import random
 
 from team import Team, TeamContext, ByeTeam
 from tfmatch import Match
 
 
+
 class Division:
-    def __init__(self, name: str, team_list: list or None, no_of_teams: int or None, skill_style: int or None):
+    def __init__(self, name: str, team_list: list or None, no_of_teams: int or None, skill_style: int or None, debug_print=builtins.print):
         """
         This constructor is used for divs that are already final, not simulated, e.g. existing divs
         :param name: The name of the team
@@ -14,6 +19,8 @@ class Division:
         :param skill_style: way skill should be distributed - 0 for all teams have same skill, 1 for evenly distributed
         from -3 to 3, 2 for normally distributed
         """
+        #global print
+        #print = debug_print
 
         # Initializes values from parameters
         self.name = name
@@ -88,9 +95,10 @@ class Division:
         for week_no in range(number_of_matches):
             teams_sorted = self.team_list.copy()
             teams_sorted.sort(reverse=True)
-            # print("============================================================")
-            # print("Creating schedule for week " + str(week_no))
-            # print("============================================================")
+            #print("============================================================")
+            #print("Creating schedule for week " + str(week_no))
+            #builtins.print(f" [{datetime.datetime.now()}] Creating schedule for week " + str(week_no), file=sys.stderr)
+            #print("============================================================")
             schedule_unpacked = self.schedule_week([], teams_sorted, True)
 
             # Pack schedule
@@ -121,11 +129,11 @@ class Division:
             for team in teams_sorted:
                 printed += str(team) + " Already faced " + str(team.teams_faced) + "\n"
 
-            # print(printed)
+            #print(printed)
 
     # Recursive algorithm to schedule a given week's matches. Refer to
     # https://stackoverflow.com/questions/70236750/tree-recursion-how-to-include-conditions-in-depth-first-search
-    def schedule_week(self, s: list, r: list, home: bool):
+    def schedule_week(self, s: list, r: list, home: bool, debug_depth=0):
         # Tree of team pairs, depth-first traversal with red and green nodes
         # Use pairs to determine what is a red node.
         # - If either team is already in the schedule for this week, it's red.
@@ -138,12 +146,15 @@ class Division:
         # indices (starting 1) are away to them - 1. This means we perform additional checks for redness if home False
         schedule = s.copy()
         remaining_teams = r.copy()
+        #print(f"Depth {debug_depth}; Current schedule: {s}; Remaining teams {r}")
         # Base case 1: Negative (red node)
         # Is the team already in the schedule?
         if remaining_teams[0] in schedule:
+            #print(f"Found red node: team {remaining_teams[0].team.name} is already in schedule! Back to depth {debug_depth - 1}")
             return None
         # If away, has the team played home already in past weeks?
         if not home and remaining_teams[0] in schedule[-1].teams_faced:
+            #print(f"Found red node: Away team {remaining_teams[0].team.name} has already faced {schedule[-1].team.name}! Back to depth {debug_depth - 1}")
             return None
         # Base case 2: Positive (reached [green] leaf) - should only happen when home is False (i.e. team is away)
         if not remaining_teams[1:]:
@@ -151,16 +162,34 @@ class Division:
                 raise Exception("Odd number of teams!")
             schedule.append(remaining_teams.pop(0))
             return schedule
-        # Recursive step
-        for team in remaining_teams[1:]:
-            arg_remaining_teams = remaining_teams[1:]
-            arg_remaining_teams.remove(team)
-            arg_remaining_teams.insert(0, team)
-            path = self.schedule_week(schedule + [remaining_teams[0]], arg_remaining_teams, not home)
-            if path is not None:
-                return path
-        # No path found
-        return None
+        # Base case 3: Negative (red node): No team left that this team hasn't played!
+        if home and all(team in remaining_teams[0].teams_faced for team in remaining_teams[1:]):
+            #print(f"No path found; team {remaining_teams[0].team.name} has faced every team remaining! Returning None. Back to depth {debug_depth - 1}")
+            return None
+        # Recursive case 1: Currently on home is False, adding current Away team to schedule & recurring on rest
+        if not home:
+            schedule.append(remaining_teams.pop(0))
+            path = self.schedule_week(schedule, remaining_teams, not home,
+                                      debug_depth=debug_depth + 1)
+            #if path is not None:
+                #print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
+            #else:
+                #print(f"No path found on away. Returning None. Back to depth {debug_depth - 1}")
+            return path
+        # Recursive case 2: Currently on home is True, looking for an opponent to home
+        else:
+            for team in [team for team in remaining_teams[1:] if team not in remaining_teams[0].teams_faced]:
+                arg_remaining_teams = remaining_teams[1:]
+                arg_remaining_teams.remove(team)
+                arg_remaining_teams.insert(0, team)
+                path = self.schedule_week(schedule + [remaining_teams[0]], arg_remaining_teams, not home,
+                                          debug_depth=debug_depth + 1)
+                if path is not None:
+                    #print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
+                    return path
+            # No path found
+            #print(f"No path found. Returning None. Back to depth {debug_depth - 1}")
+            return None
 
     def __str__(self):
         teams_sorted = self.team_list.copy()
@@ -170,6 +199,9 @@ class Division:
             returned += str(team) + "\n"
         return returned
 
+    def rank(self, team: TeamContext):
+        return sorted(self.team_list, reverse=True).index(team)
+
 
 def team_search_in_schedule(schedule: list, searched: TeamContext):
     for matchup in schedule:
@@ -177,3 +209,12 @@ def team_search_in_schedule(schedule: list, searched: TeamContext):
             if team == searched:
                 return True
     return False
+
+
+class DebugTree:
+    def __init__(self, elem):
+        self.root = elem
+        self.children = []
+
+    def add_child(self, elem):
+        self.children.append(elem)
