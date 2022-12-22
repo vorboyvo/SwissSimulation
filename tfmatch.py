@@ -4,7 +4,8 @@ import numpy
 
 
 class Match:
-    def __init__(self, home_skill: float, away_skill: float, koth: bool):
+    def __init__(self, home_skill: float, away_skill: float, koth: bool,
+                 all_or_nothing=False, seed=None):
         """
             koth is a boolean value, taking on false if the match is stopwatch and true if the match is koth
 
@@ -16,8 +17,8 @@ class Match:
 
             We run the match until we have a winner, i.e. at least one team has won 4 rounds on koth or 2 on stopwatch.
         """
-        home_match_skill = home_skill #numpy.random.normal(home_skill, 0.1)
-        away_match_skill = away_skill #numpy.random.normal(away_skill, 0.1)
+        home_match_skill = home_skill
+        away_match_skill = away_skill
         n = home_match_skill - away_match_skill
         home_win_chance = 1 / (1 + numpy.exp(-2 * n))
 
@@ -30,41 +31,10 @@ class Match:
         home_rounds_won = 0
         away_rounds_won = 0
         while home_rounds_won < winlimit and away_rounds_won < winlimit:
-            round_outcome = run_round(home_win_chance)
-            if round_outcome:
-                home_rounds_won += 1
+            if not all_or_nothing:
+                round_outcome = run_round(home_win_chance)
             else:
-                away_rounds_won += 1
-
-        # Treat stopwatch rounds as 2 each
-        if not koth:
-            home_rounds_won *= 2
-            away_rounds_won *= 2
-
-        self.home_rounds_won = home_rounds_won
-        self.away_rounds_won = away_rounds_won
-        self.winner = True if home_rounds_won > away_rounds_won else False  # Winner is TRUE if home wins, FALSE
-        # otherwise
-        self.home_match_points, self.away_match_points = get_match_points(self.home_rounds_won, self.away_rounds_won)
-        self.home_inq_match_points, self.away_inq_match_points = get_inq_match_points(self.home_rounds_won,
-                                                                                      self.away_rounds_won)
-
-        self.home_match_result = MatchResult(self.winner, self.home_rounds_won, self.away_rounds_won,
-                                             self.home_match_points, self.home_inq_match_points)
-        self.away_match_result = MatchResult(not self.winner, self.away_rounds_won, self.home_rounds_won,
-                                             self.away_match_points, self.away_inq_match_points)
-
-    def all_or_nothing__init__(self, home_skill: float, away_skill: float, koth: bool):
-        # Run first to 4 on koth or 2 on stopwatch
-        if koth:
-            winlimit = 4
-        else:
-            winlimit = 2
-
-        home_rounds_won = 0
-        away_rounds_won = 0
-        while home_rounds_won < winlimit and away_rounds_won < winlimit:
-            round_outcome = home_skill > away_skill
+                round_outcome = home_match_skill >= away_match_skill #Undefined behaviour when the two are equal
             if round_outcome:
                 home_rounds_won += 1
             else:

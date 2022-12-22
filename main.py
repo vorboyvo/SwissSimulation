@@ -102,7 +102,7 @@ def figure_out_what_is_wrong_with_the_means():
 
 if __name__ == "__main__":
     # measure_combined_distortions(2,5,23,10000)
-    # measure_distortions_over_adding_matches(2,14,16,10000)
+    # measure_distortions_over_adding_matches(2,26,32,5000)
     start = time.time()
     measure_distortions_over_adding_matches(2,11,14,1000)
     end = time.time()

@@ -167,7 +167,7 @@ class Division:
             schedule.append(remaining_teams.pop(0))
             return schedule
         # Base case 3: Negative (red node): No team left that this team hasn't played!
-        if home and all(team in remaining_teams[0].teams_faced or team is remaining_teams[0] for team in remaining_teams):
+        if home and all(team is remaining_teams[0] or team in remaining_teams[0].teams_faced for team in remaining_teams):
             # print(f"No path found; team {remaining_teams[0].team.name} has faced every team remaining! Returning None. Back to depth {debug_depth - 1}")
             return None
         # Recursive case 1: Currently on home is False, adding current Away team to schedule & recurring on rest
