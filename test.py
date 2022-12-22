@@ -1,15 +1,29 @@
-from team import Team
-from tfmatch import Match
+import builtins
+import time
 
-home = Team("Good team",0.25)
-away = Team("Open shitters",-0.25)
+from division import Division
 
-home_rounds = 0
-away_rounds = 0
+"""
+from division import Division
 
-for i in range(500):
-    match = Match(home_skill=home.skill,away_skill=away.skill,koth=True)
-    home_rounds += match.home_rounds_won
-    away_rounds += match.away_rounds_won
+debug_file = open('test.txt', 'w')
 
-print(home_rounds/(home_rounds+away_rounds))
+def debug_print(*args, **kwargs):
+    builtins.print(*args, file=debug_file, **kwargs)
+
+for i in range(20):
+    print(f"Running Swiss division with 14 matches {i}")
+    main = Division(name="Main", team_list=None, no_of_teams=13, skill_style=2, debug_print=debug_print)
+    # debug_file.seek(0)
+    # debug_file.truncate(0)
+    # time.sleep(2)
+    try:
+        main.swiss_run_matches(11)
+    except Exception as err:  #Cope and seethe, PyCharm Professional
+        # time.sleep(3)
+        # debug_file.close()
+        raise err
+"""
+
+main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=2, verbose=True)
+main.swiss_run_matches(5)

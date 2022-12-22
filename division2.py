@@ -7,9 +7,10 @@ from numpy import random
 from team import Team, TeamContext, ByeTeam
 from tfmatch import Match
 
+
 class Division:
     def __init__(self, name: str, team_list: list or None, no_of_teams: int or None, skill_style: int or None,
-                 debug_print=builtins.print, verbose=False):
+                 debug_print=builtins.print):
         """
         This constructor is used for divs that are already final, not simulated, e.g. existing divs
         :param name: The name of the team
@@ -28,7 +29,6 @@ class Division:
             return
         else:
             self.team_list = []
-        self.verbose = verbose
 
         # Creates teams according to skill style
 
@@ -95,10 +95,10 @@ class Division:
         for week_no in range(number_of_matches):
             teams_sorted = self.team_list.copy()
             teams_sorted.sort(reverse=True)
-            self.verbose_print("============================================================")
-            self.verbose_print("Creating schedule for week " + str(week_no))
+            # print("============================================================")
+            # print("Creating schedule for week " + str(week_no))
             # builtins.print(f" [{datetime.datetime.now()}] Creating schedule for week " + str(week_no), file=sys.stderr)
-            self.verbose_print("============================================================")
+            # print("============================================================")
 
             schedule_unpacked = self.schedule_week([], teams_sorted, True)
 
@@ -133,7 +133,7 @@ class Division:
             for team in teams_sorted:
                 printed += str(team) + " Already faced " + str(team.teams_faced) + "\n"
 
-            self.verbose_print(printed)
+            # print(printed)
 
     # Recursive algorithm to schedule a given week's matches. Refer to
     # https://stackoverflow.com/questions/70236750/tree-recursion-how-to-include-conditions-in-depth-first-search
@@ -148,47 +148,45 @@ class Division:
         # Visit green nodes but REVERSIBLY - We want to be able to backtrack if we don't reach a green leaf!
         # In effect, we're building an ordered list where even indices (starting 0) are home & the following odd
         # indices (starting 1) are away to them - 1. This means we perform additional checks for redness if home False
-        schedule = s
-        remaining_teams = r
+        schedule = s.copy()
+        remaining_teams = r.copy()
         # print(f"Depth {debug_depth}; Current schedule: {s}; Remaining teams {r}")
         # Base case 1: Negative (red node)
         # Is the team already in the schedule?
-        # if remaining_teams[0] in schedule:
+        if remaining_teams[0] in schedule:
             # print(f"Found red node: team {remaining_teams[0].team.name} is already in schedule! Back to depth {debug_depth - 1}")
-        #     return None
+            return None
         # If away, has the team played home already in past weeks?
-        # if not home and remaining_teams[0] in schedule[-1].teams_faced:
+        if not home and remaining_teams[0] in schedule[-1].teams_faced:
             # print(f"Found red node: Away team {remaining_teams[0].team.name} has already faced {schedule[-1].team.name}! Back to depth {debug_depth - 1}")
-        #    return None
+            return None
         # Base case 2: Positive (reached [green] leaf) - should only happen when home is False (i.e. team is away)
-        if len(remaining_teams) == 1:
+        if not remaining_teams[1:]:
             if home:
                 raise Exception("Odd number of teams!")
             schedule.append(remaining_teams.pop(0))
             return schedule
         # Base case 3: Negative (red node): No team left that this team hasn't played!
-        if home and all(team in remaining_teams[0].teams_faced or team is remaining_teams[0] for team in remaining_teams):
+        if home and all(team in remaining_teams[0].teams_faced for team in remaining_teams[1:]):
             # print(f"No path found; team {remaining_teams[0].team.name} has faced every team remaining! Returning None. Back to depth {debug_depth - 1}")
             return None
         # Recursive case 1: Currently on home is False, adding current Away team to schedule & recurring on rest
         if not home:
             schedule.append(remaining_teams.pop(0))
-            return self.schedule_week(schedule.copy(), remaining_teams.copy(), not home,
+            path = self.schedule_week(schedule, remaining_teams, not home,
                                       debug_depth=debug_depth + 1)
             # if path is not None:
                 # print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
             # else:
                 # print(f"No path found on away. Returning None. Back to depth {debug_depth - 1}")
-            # return path
+            return path
         # Recursive case 2: Currently on home is True, looking for an opponent to home
         else:
-            arg_remaining_teams = remaining_teams[1:]
-            for team in arg_remaining_teams:
-                if team in remaining_teams[0].teams_faced:
-                    continue
+            for team in [team for team in remaining_teams[1:] if team not in remaining_teams[0].teams_faced]:
+                arg_remaining_teams = remaining_teams[1:]
                 arg_remaining_teams.remove(team)
                 arg_remaining_teams.insert(0, team)
-                path = self.schedule_week(schedule + [remaining_teams[0]], arg_remaining_teams.copy(), not home,
+                path = self.schedule_week(schedule + [remaining_teams[0]], arg_remaining_teams, not home,
                                           debug_depth=debug_depth + 1)
                 if path is not None:
                     # print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
@@ -208,9 +206,6 @@ class Division:
     def rank(self, team: TeamContext):
         return sorted(self.team_list, reverse=True).index(team)
 
-    def verbose_print(self, *args, sep=' ', end='\n', file=None, flush=False):
-        if self.verbose:
-            print(*args, sep=sep, end=end, file=file, flush=flush)
 
 def team_search_in_schedule(schedule: list, searched: TeamContext):
     for matchup in schedule:
@@ -227,4 +222,3 @@ class DebugTree:
 
     def add_child(self, elem):
         self.children.append(elem)
-

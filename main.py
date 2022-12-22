@@ -1,89 +1,109 @@
+import math
 import operator
 import random
 import statistics
+import time
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
-from scipy.stats import ttest_ind, t
+from scipy.stats import ttest_ind
 
 from division import Division
 
-def get_distortions(number_of_matches):
-    main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1)
+
+def get_distortions(number_of_teams, number_of_matches=0):
+    main = Division(name="Main", team_list=None, no_of_teams=number_of_teams, skill_style=1)
     random.shuffle(main.team_list)
-    try:
+    if number_of_matches == 0:
+        main.rr_run_matches()
+    else:
         main.swiss_run_matches(number_of_matches)
-    except Exception:  # Cope and seethe, PyCharm Professional
-        print("Fucked up!")
-        return None
     team_skills = [team.team.skill for team in main.team_list]
     team_match_points = [team.match_points for team in main.team_list]
     team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
     team_match_point_rank = [sorted(team_match_points).index(team) for team in team_match_points]
-    return list(map(operator.sub, team_skill_rank, team_match_point_rank))
+    distortions = list(map(operator.sub, team_skill_rank, team_match_point_rank))
+    return sum([abs(distortion)/number_of_teams for distortion in distortions])
 
-def measure_distortions_over_adding_matches():
+def measure_distortions_over_adding_matches(start,stop,number_of_teams,iters):
     distortion_dicts = []
-    errors = 0
 
-    for i in range(50):
-        print(f"Running iteration {i}")
-        for number_of_matches in range(5, 16, 1):
-            print(f"Running Swiss division with {number_of_matches} matches")
-            distortions = get_distortions(number_of_matches)
+    for i in range(iters):
+        for number_of_matches in range(start, stop, 1):
             distortion_dicts.append(
-                {"matches": number_of_matches, "distortions": sum([abs(distortion) for distortion in distortions])})
+                {"matches": number_of_matches, "distortions": get_distortions(number_of_teams, number_of_matches),
+                 "even": 1 if number_of_matches % 2 == 0 else 0})
+
+        if i % 100 == 0:
+            print(f"Iteration {i}")
 
     df = pd.DataFrame.from_records(distortion_dicts)
     df.to_csv(datetime.now().strftime(r'results/distortions_matches_%m%d%Y%H%M%S.csv'), index=False)
 
+def measure_distortions_over_adding_teams(start,stop,number_of_matches,iters):
+    distortion_dicts = []
+
+    for i in range(iters):
+        for number_of_teams in range(start, stop, 1):
+            distortion_dicts.append(
+                {"matches": number_of_matches, "distortions": get_distortions(number_of_teams, number_of_matches)})
+
+    df = pd.DataFrame.from_records(distortion_dicts)
+    df.to_csv(datetime.now().strftime(r'results/distortions_teams_%m%d%Y%H%M%S.csv'), index=False)
+
+def measure_combined_distortions(matches_start,teams_start,teams_stop,iters):
+    distortion_dicts = []
+
+    for i in range(iters):
+        print(f"Iteration {i}")
+        for number_of_teams in range(teams_start, teams_stop, 1):
+            for number_of_matches in range(matches_start, math.ceil(number_of_teams/2)*2-2):
+                distortion_dicts.append({"matches": number_of_matches,
+                    "teams": number_of_teams, "even": 1 if number_of_matches % 2 == 0 else 0,
+                    "distortions": get_distortions(number_of_teams, number_of_matches)})
+
+    df = pd.DataFrame.from_records(distortion_dicts)
+    df.to_csv(datetime.now().strftime(r'results/distortions_combined_%m%d%Y%H%M%S.csv'), index=False)
 
 def measure_distortions_over_two_numbers_of_matches(first,second,iters):
     distortion_dicts = []
-    errors = 0
 
     for i in range(iters):
-        #print(f"Running iteration {i}")
         for number_of_matches in range(first, second+1, second-first):
-            #print(f"Running Swiss division with {number_of_matches} matches")
-            main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1)
-            random.shuffle(main.team_list)
-            try:
-                main.swiss_run_matches(number_of_matches)
-            except Exception:  #Cope and seethe, PyCharm Professional
-                errors += 1
-                print("Fucked up!")
-                continue
-            team_names = [team.team.name for team in main.team_list]
-            team_skills = [team.team.skill for team in main.team_list]
-            team_match_points = [team.match_points for team in main.team_list]
-            team_skill_rank = [sorted(team_skills).index(team) for team in team_skills]
-            team_match_point_rank = [sorted(team_match_points).index(team) for team in team_match_points]
-            distortions = list(map(operator.sub, team_skill_rank, team_match_point_rank))
             distortion_dicts.append(
-                {"matches": number_of_matches, "distortions": sum([abs(distortion) for distortion in distortions])})
+                {"matches": number_of_matches, "distortions": get_distortions(16, number_of_matches)})
 
     df = pd.DataFrame.from_records(distortion_dicts)
     first_df = df[df['matches']==first]
     second_df = df[df['matches']==second]
-    #df.to_csv(datetime.now().strftime(r'results/distortions_6or7matches_%m%d%Y%H%M%S.csv'), index=False)
+    df.to_csv(datetime.now().strftime(r'results/distortions_6or7matches_%m%d%Y%H%M%S.csv'), index=False)
     tt = ttest_ind(first_df['distortions'], second_df['distortions'])
     print(tt)
 
 def figure_out_what_is_wrong_with_the_means():
-    scores = []
+    # Used in the past to diagnose my issue with inconsistent test results
+    # Diagnosis: Sample size issue
+    scores = [[],[],[],[],[],[],[],[],[],[],[]]
 
     i = 0
-    print("stuff,overall avg,last 100 matches avg")
-    while i <= 25003:
+    print("Iterations,1 match,2 matches,3 matches,4 matches,5 matches,6 matches,7 matches,8 matches,9 matches,10 matches")
+    while i < 25000:
         i += 1
 
-        distortions = get_distortions(6)
-        scores.append(sum([abs(distortion) for distortion in distortions]))
-
+        for j in range(1, 12):
+            scores[j-1].append(get_distortions(16, j))
 
         if i % 100 == 0:
-            print(i, format(statistics.mean(scores), '.5f'), format(statistics.mean(scores[-100:]), '.5f'), sep=",")
+            score_string = ""
+            for score_list in scores:
+                score_string += "," + format(statistics.mean(score_list), '.5f')
 
-figure_out_what_is_wrong_with_the_means()
+            print(i, score_string, sep="")
+
+if __name__ == "__main__":
+    # measure_combined_distortions(2,5,23,10000)
+    # measure_distortions_over_adding_matches(2,14,16,10000)
+    start = time.time()
+    measure_distortions_over_adding_matches(2,11,14,1000)
+    end = time.time()
+    print(end - start)
