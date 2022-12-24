@@ -7,9 +7,10 @@ from numpy import random
 from team import Team, TeamContext, ByeTeam
 from tfmatch import Match
 
+
 class Division:
     def __init__(self, name: str, team_list: list or None, no_of_teams: int or None, skill_style: int or None,
-                 debug_print=builtins.print, verbose=False):
+                 debug_print=builtins.print, verbose=False, seed=None):
         """
         This constructor is used for divs that are already final, not simulated, e.g. existing divs
         :param name: The name of the team
@@ -29,6 +30,7 @@ class Division:
         else:
             self.team_list = []
         self.verbose = verbose
+        self.seed = seed
 
         # Creates teams according to skill style
 
@@ -118,7 +120,7 @@ class Division:
 
             # Run the matches
             for pairing in schedule:
-                my_match = Match(pairing[0].team.skill, pairing[1].team.skill, week_no % 2 != 0)
+                my_match = Match(pairing[0].team.skill, pairing[1].team.skill, week_no % 2 != 0, seed=self.seed)
                 pairing[0] + my_match.get_home_result()
                 pairing[1] + my_match.get_away_result()
                 pairing[0].teams_faced.append(pairing[1])
@@ -154,11 +156,11 @@ class Division:
         # Base case 1: Negative (red node)
         # Is the team already in the schedule?
         # if remaining_teams[0] in schedule:
-            # print(f"Found red node: team {remaining_teams[0].team.name} is already in schedule! Back to depth {debug_depth - 1}")
+        # print(f"Found red node: team {remaining_teams[0].team.name} is already in schedule! Back to depth {debug_depth - 1}")
         #     return None
         # If away, has the team played home already in past weeks?
         # if not home and remaining_teams[0] in schedule[-1].teams_faced:
-            # print(f"Found red node: Away team {remaining_teams[0].team.name} has already faced {schedule[-1].team.name}! Back to depth {debug_depth - 1}")
+        # print(f"Found red node: Away team {remaining_teams[0].team.name} has already faced {schedule[-1].team.name}! Back to depth {debug_depth - 1}")
         #    return None
         # Base case 2: Positive (reached [green] leaf) - should only happen when home is False (i.e. team is away)
         if len(remaining_teams) == 1:
@@ -167,7 +169,8 @@ class Division:
             schedule.append(remaining_teams.pop(0))
             return schedule
         # Base case 3: Negative (red node): No team left that this team hasn't played!
-        if home and all(team is remaining_teams[0] or team in remaining_teams[0].teams_faced for team in remaining_teams):
+        if home and all(
+                team is remaining_teams[0] or team in remaining_teams[0].teams_faced for team in remaining_teams):
             # print(f"No path found; team {remaining_teams[0].team.name} has faced every team remaining! Returning None. Back to depth {debug_depth - 1}")
             return None
         # Recursive case 1: Currently on home is False, adding current Away team to schedule & recurring on rest
@@ -176,9 +179,9 @@ class Division:
             return self.schedule_week(schedule.copy(), remaining_teams.copy(), not home,
                                       debug_depth=debug_depth + 1)
             # if path is not None:
-                # print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
+            # print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
             # else:
-                # print(f"No path found on away. Returning None. Back to depth {debug_depth - 1}")
+            # print(f"No path found on away. Returning None. Back to depth {debug_depth - 1}")
             # return path
         # Recursive case 2: Currently on home is True, looking for an opponent to home
         else:
@@ -212,6 +215,7 @@ class Division:
         if self.verbose:
             print(*args, sep=sep, end=end, file=file, flush=flush)
 
+
 def team_search_in_schedule(schedule: list, searched: TeamContext):
     for matchup in schedule:
         for team in matchup:
@@ -227,4 +231,3 @@ class DebugTree:
 
     def add_child(self, elem):
         self.children.append(elem)
-

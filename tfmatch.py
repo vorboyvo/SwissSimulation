@@ -1,4 +1,4 @@
-from random import randrange
+import random
 
 import numpy
 
@@ -21,6 +21,9 @@ class Match:
         away_match_skill = away_skill
         n = home_match_skill - away_match_skill
         home_win_chance = 1 / (1 + numpy.exp(-2 * n))
+
+        if seed is not None:
+            random.seed(seed)
 
         # Run first to 4 on koth or 2 on stopwatch
         if koth:
@@ -82,7 +85,7 @@ def run_round(home_win_chance):
     :param home_win_chance: Home's chance to win
     :return: True if home wins, False if away wins
     """
-    return randrange(100) < home_win_chance * 100
+    return random.randrange(100) < home_win_chance * 100
 
 
 def get_match_points(home_rounds_won, away_rounds_won):

@@ -2,6 +2,7 @@ import builtins
 import time
 
 from division import Division
+from divisionP import blossom_swiss_run_matches
 
 """
 from division import Division
@@ -25,5 +26,6 @@ for i in range(20):
         raise err
 """
 
-main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=2, verbose=True)
+main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=1, seed=10)
 main.swiss_run_matches(5)
+print(main)

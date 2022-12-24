@@ -4,7 +4,7 @@ from functools import total_ordering
 
 @total_ordering
 class Team:
-    def __init__(self, name: str, skill: float):
+    def __init__(self, name: str, skill: float, bye=False):
         """
         Initializes a team
         :param name:
@@ -12,6 +12,7 @@ class Team:
         """
         self.name = name
         self.skill = skill
+        self.bye = bye
 
     def __lt__(self, other):
         return self.skill < other.skill
@@ -22,7 +23,7 @@ class Team:
 
 class ByeTeam(Team):
     def __init__(self):
-        super().__init__("Bye Week", -99999999)
+        super().__init__("Bye Week", -99999999, True)
 
 
 @total_ordering
@@ -56,8 +57,10 @@ class TeamContext:
         return self.team.name
 
     def __lt__(self, other):
-        if not self.match_points == other.match_points:
-            return self.match_points < other.match_points
+        if self.match_points < other.match_points:
+            return True
+        elif self.match_points > other.match_points:
+            return False
         # Tiebreak by Median Buchholz
         median_buchholz = 0
         max_value = 0
