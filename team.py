@@ -64,7 +64,7 @@ class TeamContext:
         # Tiebreak by Median Buchholz
         median_buchholz = 0
         max_value = 0
-        min_value = 999999 #Really Big Number
+        min_value = 999999  # Really Big Number
         for team in self.teams_faced:
             median_buchholz += team.match_points
             max_value = max(max_value, team.match_points)

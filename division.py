@@ -56,6 +56,14 @@ class Division:
         if len(self.team_list) % 2 == 1:
             self.team_list.append(TeamContext(ByeTeam()))
 
+    def run_match(self, home_team, away_team, koth):
+        my_match = Match(home_team.team.skill, away_team.team.skill, koth, seed=self.seed)
+        home_team + my_match.get_home_result()
+        away_team + my_match.get_away_result()
+        home_team.teams_faced.append(away_team)
+        away_team.teams_faced.append(home_team)
+        return my_match
+
     def rr_run_matches(self):
         week_list = []
 
@@ -84,58 +92,56 @@ class Division:
             koth = week_list.index(week) % 2 != 0
 
             for pairing in week:
-                my_match = Match(pairing[0].team.skill, pairing[1].team.skill, koth)
-                pairing[0] + my_match.get_home_result()
-                pairing[1] + my_match.get_away_result()
+                my_match = self.run_match(pairing[0], pairing[1], koth)
                 printed += " " + str(my_match)
             # print(printed)
 
     # DFS based algorithm to run Swiss matches
     def swiss_run_matches(self, number_of_matches: int):
-
         # Play the week's matches and make necessary adjustments for every week
         for week_no in range(number_of_matches):
-            teams_sorted = self.team_list.copy()
-            teams_sorted.sort(reverse=True)
-            # self.verbose_print("============================================================")
-            # self.verbose_print("Creating schedule for week " + str(week_no))
-            # builtins.print(f" [{datetime.datetime.now()}] Creating schedule for week " + str(week_no), file=sys.stderr)
-            # self.verbose_print("============================================================")
-
-            schedule_unpacked = self.schedule_week([], teams_sorted, True)
-
-            # Pack schedule
-            schedule = []
-            try:
-                schedule_iter = iter(schedule_unpacked)
-            except:
-                raise Exception(f"Impossible combination on week {week_no}")
-            while True:
-                try:
-                    schedule.append((next(schedule_iter), next(schedule_iter)))
-                except StopIteration:
-                    break
-
-            # printed = "Week " + str(week_no) + ": " + str(schedule)
+            schedule = self.schedule_div_week()
 
             # Run the matches
             for pairing in schedule:
-                my_match = Match(pairing[0].team.skill, pairing[1].team.skill, week_no % 2 != 0, seed=self.seed)
-                pairing[0] + my_match.get_home_result()
-                pairing[1] + my_match.get_away_result()
-                pairing[0].teams_faced.append(pairing[1])
-                pairing[1].teams_faced.append(pairing[0])
-                # printed += " " + str(my_match)
+                self.run_match(pairing[0], pairing[1], week_no % 2 != 0)
 
             # Sort teams_sorted
             teams_sorted = self.team_list.copy()
             teams_sorted.sort(reverse=True)
 
-            # printed += "\nName,Skill,W,L,RW,RL,MP\n"
-            # for team in teams_sorted:
-                # printed += str(team) + " Already faced " + str(team.teams_faced) + "\n"
+    def swiss_run_matches_analyze_skill_diff(self, number_of_matches: int):
+        skill_diffs = {}
 
-            # self.verbose_print(printed)
+        # Play the week's matches and make necessary adjustments for every week
+        for week_no in range(number_of_matches):
+            skill_diffs[week_no] = []
+            schedule = self.schedule_div_week()
+
+            # Run the matches
+            for pairing in schedule:
+                skill_diffs[week_no].append(abs(pairing[0].team.skill - pairing[1].team.skill))
+                self.run_match(pairing[0], pairing[1], week_no % 2 != 0)
+
+            # Sort teams_sorted
+            teams_sorted = self.team_list.copy()
+            teams_sorted.sort(reverse=True)
+
+        return skill_diffs
+
+    def schedule_div_week(self):
+        teams_sorted = self.team_list.copy()
+        teams_sorted.sort(reverse=True)
+        schedule_unpacked = self.schedule_week([], teams_sorted, True)  # Returns schedules as a single ordered list
+        # without pairing - we "pack" this list into a list of pairs next
+        schedule = []
+        schedule_iter = iter(schedule_unpacked)
+        while True:
+            try:
+                schedule.append((next(schedule_iter), next(schedule_iter)))
+            except StopIteration:
+                break
+        return schedule
 
     # Recursive algorithm to schedule a given week's matches. Refer to
     # https://stackoverflow.com/questions/70236750/tree-recursion-how-to-include-conditions-in-depth-first-search
@@ -159,7 +165,8 @@ class Division:
             return schedule
         # Recursive case 1: Currently on home is False, adding current Away team to schedule & recurring on rest
         if not home:
-            return self.schedule_week(schedule + [remaining_teams.pop(0)], remaining_teams.copy(), not home, debug_depth=debug_depth + 1)
+            return self.schedule_week(schedule + [remaining_teams.pop(0)], remaining_teams.copy(), not home,
+                                      debug_depth=debug_depth + 1)
             # if path is not None:
             # print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
             # else:
@@ -207,6 +214,7 @@ class Division:
             if team not in self.team_list:
                 return False
         return True
+
 
 def team_search_in_schedule(schedule: list, searched: TeamContext):
     for matchup in schedule:
