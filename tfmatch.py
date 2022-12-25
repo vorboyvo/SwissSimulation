@@ -24,6 +24,8 @@ class Match:
 
         if seed is not None:
             random.seed(seed)
+        else:
+            random.seed()
 
         # Run first to 4 on koth or 2 on stopwatch
         if koth:

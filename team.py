@@ -72,4 +72,3 @@ class TeamContext:
         median_buchholz -= max_value
         median_buchholz -= min_value
         return max(median_buchholz, 0)
-

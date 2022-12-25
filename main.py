@@ -12,7 +12,7 @@ from division import Division
 
 
 def get_distortions(number_of_teams, number_of_matches=0):
-    main = Division(name="Main", team_list=None, no_of_teams=number_of_teams, skill_style=1)
+    main = Division(name="Main", team_list=None, no_of_teams=number_of_teams, skill_style=2)
     random.shuffle(main.team_list)
     if number_of_matches == 0:
         main.rr_run_matches()
@@ -29,13 +29,12 @@ def measure_distortions_over_adding_matches(start,stop,number_of_teams,iters):
     distortion_dicts = []
 
     for i in range(iters):
+        if not i % min(100, 10**math.floor(math.log10(iters-1))):
+            print(f"Iteration {i}")
         for number_of_matches in range(start, stop, 1):
             distortion_dicts.append(
                 {"matches": number_of_matches, "distortions": get_distortions(number_of_teams, number_of_matches),
                  "even": 1 if number_of_matches % 2 == 0 else 0})
-
-        if i % 100 == 0:
-            print(f"Iteration {i}")
 
     df = pd.DataFrame.from_records(distortion_dicts)
     df.to_csv(datetime.now().strftime(r'results/distortions_matches_%m%d%Y%H%M%S.csv'), index=False)
@@ -54,13 +53,20 @@ def measure_distortions_over_adding_teams(start,stop,number_of_matches,iters):
 def measure_combined_distortions(matches_start,teams_start,teams_stop,iters):
     distortion_dicts = []
 
-    for i in range(iters):
-        print(f"Iteration {i}")
-        for number_of_teams in range(teams_start, teams_stop, 1):
-            for number_of_matches in range(matches_start, math.ceil(number_of_teams/2)*2-2):
-                distortion_dicts.append({"matches": number_of_matches,
-                    "teams": number_of_teams, "even": 1 if number_of_matches % 2 == 0 else 0,
-                    "distortions": get_distortions(number_of_teams, number_of_matches)})
+    try:
+        for i in range(iters):
+            start_time = time.time()
+            for number_of_teams in range(teams_start, teams_stop, 1):
+                for number_of_matches in range(matches_start, math.ceil(number_of_teams/2)*2-2):
+                    distortion_dicts.append({"matches": number_of_matches,
+                        "teams": number_of_teams, "even": 1 if number_of_matches % 2 == 0 else 0,
+                        "distortions": get_distortions(number_of_teams, number_of_matches)})
+            end_time = time.time()
+            print(f"Iteration {i} took time {end_time-start_time}")
+    except KeyboardInterrupt:
+        df = pd.DataFrame.from_records(distortion_dicts)
+        df.to_csv(datetime.now().strftime(r'results/distortions_combined_%m%d%Y%H%M%S.csv'), index=False)
+        raise KeyboardInterrupt
 
     df = pd.DataFrame.from_records(distortion_dicts)
     df.to_csv(datetime.now().strftime(r'results/distortions_combined_%m%d%Y%H%M%S.csv'), index=False)
@@ -101,9 +107,4 @@ def figure_out_what_is_wrong_with_the_means():
             print(i, score_string, sep="")
 
 if __name__ == "__main__":
-    # measure_combined_distortions(2,5,23,10000)
-    # measure_distortions_over_adding_matches(2,26,32,5000)
-    start = time.time()
-    measure_distortions_over_adding_matches(2,11,14,1000)
-    end = time.time()
-    print(end - start)
+    measure_combined_distortions(4,10,32,500)
