@@ -30,12 +30,13 @@ def measure_distortions_over_adding_matches(start, stop, number_of_teams, iters)
     distortion_dicts = []
 
     for i in range(iters):
-        if not i % min(100, 10 ** math.floor(math.log10(iters - 1))):
-            print(f"Iteration {i}")
+        start_time = time.time()
         for number_of_matches in range(start, stop, 1):
             distortion_dicts.append(
                 {"matches": number_of_matches, "distortions": get_distortions(number_of_teams, number_of_matches),
                  "even": 1 if number_of_matches % 2 == 0 else 0})
+        end_time = time.time()
+        print(f"Iteration {i} took time {end_time - start_time}")
 
     df = pd.DataFrame.from_records(distortion_dicts)
     df.to_csv(datetime.now().strftime(r'results/distortions_matches_%m%d%Y%H%M%S.csv'), index=False)
@@ -112,4 +113,4 @@ def measure_mean_skill_difference_per_week(number_of_teams, iters):
 
 
 if __name__ == "__main__":
-    measure_mean_skill_difference_per_week(16, 500)
+    measure_distortions_over_adding_matches(7,62,64,500)
