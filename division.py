@@ -81,9 +81,7 @@ class Division:
             current_team_list.insert(0, fixed_team)
             for j in range(0, round(number_teams / 2)):
                 week.append((current_team_list[j], current_team_list[-j - 1]))
-            temp = rotating_teams[0]
-            rotating_teams.remove(temp)
-            rotating_teams.append(temp)
+            rotating_teams.append(rotating_teams.pop(0))
             week_list.append(week)
 
         # Run matches
@@ -100,7 +98,7 @@ class Division:
     def swiss_run_matches(self, number_of_matches: int):
         # Play the week's matches and make necessary adjustments for every week
         for week_no in range(number_of_matches):
-            schedule = self.schedule_div_week()
+            schedule = self.schedule_week()
 
             # Run the matches
             for pairing in schedule:
@@ -116,7 +114,7 @@ class Division:
         # Play the week's matches and make necessary adjustments for every week
         for week_no in range(number_of_matches):
             skill_diffs[week_no] = []
-            schedule = self.schedule_div_week()
+            schedule = self.schedule_week()
 
             # Run the matches
             for pairing in schedule:
@@ -129,10 +127,10 @@ class Division:
 
         return skill_diffs
 
-    def schedule_div_week(self):
+    def schedule_week(self):
         teams_sorted = self.team_list.copy()
         teams_sorted.sort(reverse=True)
-        schedule_unpacked = self.schedule_week([], teams_sorted, True)  # Returns schedules as a single ordered list
+        schedule_unpacked = self.dfs_find_schedule([], teams_sorted, True)  # Returns schedules as a single ordered list
         # without pairing - we "pack" this list into a list of pairs next
         schedule = []
         schedule_iter = iter(schedule_unpacked)
@@ -145,7 +143,7 @@ class Division:
 
     # Recursive algorithm to schedule a given week's matches. Refer to
     # https://stackoverflow.com/questions/70236750/tree-recursion-how-to-include-conditions-in-depth-first-search
-    def schedule_week(self, schedule: list, remaining_teams: list, home: bool, debug_depth=0):
+    def dfs_find_schedule(self, schedule: list, remaining_teams: list, home: bool, debug_depth=0):
         # Tree of team pairs, depth-first traversal with red and green nodes
         # Use pairs to determine what is a red node.
         # - If either team is already in the schedule for this week, it's red.
@@ -165,8 +163,8 @@ class Division:
             return schedule
         # Recursive case 1: Currently on home is False, adding current Away team to schedule & recurring on rest
         if not home:
-            return self.schedule_week(schedule + [remaining_teams.pop(0)], remaining_teams.copy(), not home,
-                                      debug_depth=debug_depth + 1)
+            return self.dfs_find_schedule(schedule + [remaining_teams.pop(0)], remaining_teams.copy(), not home,
+                                          debug_depth=debug_depth + 1)
             # if path is not None:
             # print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
             # else:
@@ -180,8 +178,8 @@ class Division:
                     continue
                 arg_remaining_teams.remove(team)
                 arg_remaining_teams.insert(0, team)
-                path = self.schedule_week(schedule + [remaining_teams[0]], arg_remaining_teams.copy(), not home,
-                                          debug_depth=debug_depth + 1)
+                path = self.dfs_find_schedule(schedule + [remaining_teams[0]], arg_remaining_teams.copy(), not home,
+                                              debug_depth=debug_depth + 1)
                 if path is not None:
                     # print(f"Found green node. Returning path. Back to depth {debug_depth - 1}")
                     return path
