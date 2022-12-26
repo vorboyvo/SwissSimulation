@@ -222,12 +222,3 @@ def team_search_in_schedule(schedule: list, searched: TeamContext):
             if team == searched:
                 return True
     return False
-
-
-class DebugTree:
-    def __init__(self, elem):
-        self.root = elem
-        self.children = []
-
-    def add_child(self, elem):
-        self.children.append(elem)

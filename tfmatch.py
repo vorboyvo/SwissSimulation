@@ -45,11 +45,6 @@ class Match:
             else:
                 away_rounds_won += 1
 
-        # Treat stopwatch rounds as 2 each
-        if not koth:
-            home_rounds_won *= 2
-            away_rounds_won *= 2
-
         self.home_rounds_won = home_rounds_won
         self.away_rounds_won = away_rounds_won
         self.winner = True if home_rounds_won > away_rounds_won else False  # Winner is TRUE if home wins, FALSE
@@ -57,6 +52,11 @@ class Match:
         self.home_match_points, self.away_match_points = get_match_points(self.home_rounds_won, self.away_rounds_won)
         self.home_inq_match_points, self.away_inq_match_points = get_inq_match_points(self.home_rounds_won,
                                                                                       self.away_rounds_won)
+
+        # Treat stopwatch rounds as 2 each. Moved here to avoid interfering with MP calculations
+        if not koth:
+            self.home_rounds_won *= 2
+            self.away_rounds_won *= 2
 
         self.home_match_result = MatchResult(self.winner, self.home_rounds_won, self.away_rounds_won,
                                              self.home_match_points, self.home_inq_match_points)
@@ -114,6 +114,6 @@ def get_match_points(home_rounds_won, away_rounds_won):
     return home_match_points, away_match_points
 
 
-def get_inq_match_points(home_rounds_won, away_rounds_won):
+def get_inq_match_points(home_rounds_won: int, away_rounds_won: int):
     return home_rounds_won * 9 / (home_rounds_won + away_rounds_won), away_rounds_won * 9 / (
                 home_rounds_won + away_rounds_won)
