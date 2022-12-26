@@ -25,7 +25,5 @@ for i in range(20):
         raise err
 """
 
-main = Division(name="Main", team_list=None, no_of_teams=12, skill_style=1, verbose=True)
-main.swiss_run_matches(8)
-
-print(main)
+main = Division(name="Main", team_list=None, no_of_teams=16, skill_style=2, verbose=True)
+main.swiss_run_matches(7)

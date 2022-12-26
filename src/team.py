@@ -51,7 +51,7 @@ class TeamContext:
     # Returns, tab separated: name, skill, wins, losses, rounds won, rounds lost, match points, inq match points
     def __str__(self):
         return self.team.name + "," + str(round(self.team.skill, 3)) + "," + str(self.wins) + "," + str(self.losses) \
-               + "," + str(self.rounds_won) + "," + str(self.rounds_lost) + "," + str(self.match_points)
+               + "," + str(self.rounds_won) + "," + str(self.rounds_lost) + "," + str(self.match_points) + "," + str(self.teams_faced)
 
     def __repr__(self):
         return self.team.name
@@ -62,13 +62,27 @@ class TeamContext:
         elif self.match_points > other.match_points:
             return False
         # Tiebreak by Median Buchholz
-        median_buchholz = 0
-        max_value = 0
-        min_value = 999999  # Really Big Number
+        self_median_buchholz = 0
+        self_max_value = 0
+        self_min_value = 999999  # Really Big Number
         for team in self.teams_faced:
-            median_buchholz += team.match_points
-            max_value = max(max_value, team.match_points)
-            min_value = min(min_value, team.match_points)
-        median_buchholz -= max_value
-        median_buchholz -= min_value
-        return max(median_buchholz, 0)
+            self_median_buchholz += team.match_points
+            self_max_value = max(self_max_value, team.match_points)
+            self_min_value = min(self_min_value, team.match_points)
+        self_median_buchholz -= self_max_value
+        self_median_buchholz -= self_min_value
+
+        other_median_buchholz = 0
+        other_max_value = 0
+        other_min_value = 999999 # Really Big Number
+        for team in other.teams_faced:
+            other_median_buchholz += team.match_points
+            other_max_value = max(other_max_value, team.match_points)
+            other_min_value = min(other_min_value, team.match_points)
+        other_median_buchholz -= other_max_value
+        other_median_buchholz -= other_min_value
+
+        if self_median_buchholz < other_median_buchholz:
+            return True
+        else:
+            return False

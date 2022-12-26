@@ -92,18 +92,27 @@ class Division:
             for pairing in week:
                 my_match = self.run_match(pairing[0], pairing[1], koth)
                 printed += " " + str(my_match)
-            # print(printed)
+            if self.verbose:
+                print(printed)
+                print(self)
+                print()
 
     # DFS based algorithm to run Swiss matches
     def swiss_run_matches(self, number_of_matches: int):
         # Play the week's matches and make necessary adjustments for every week
         for week_no in range(number_of_matches):
             schedule = self.schedule_week()
+            printed = "Week " + str(week_no) + ": " + str(schedule)
 
             # Run the matches
             for pairing in schedule:
-                self.run_match(pairing[0], pairing[1], week_no % 2 != 0)
+                my_match = self.run_match(pairing[0], pairing[1], week_no % 2 != 0)
+                printed += " " + str(my_match)
 
+            if self.verbose:
+                print(printed)
+                print(self)
+                print()
             # Sort teams_sorted
             teams_sorted = self.team_list.copy()
             teams_sorted.sort(reverse=True)
@@ -113,6 +122,7 @@ class Division:
 
         # Play the week's matches and make necessary adjustments for every week
         for week_no in range(number_of_matches):
+
             skill_diffs[week_no] = []
             schedule = self.schedule_week()
 
@@ -190,7 +200,7 @@ class Division:
     def __str__(self):
         teams_sorted = self.team_list.copy()
         teams_sorted.sort(reverse=True)
-        returned = "Name,Skill,W,L,RW,RL,MP\n"
+        returned = "Name,Skill,W,L,RW,RL,MP,Teams Faced\n"
         for team in teams_sorted:
             returned += str(team) + "\n"
         return returned
