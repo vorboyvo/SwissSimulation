@@ -20,7 +20,6 @@ public class Main {
     static class OutWriter {
         FileWriter outputWriter;
         CSVPrinter csvPrinter;
-        Thread hook;
 
         OutWriter(String title, Object... headerValues) throws IOException {
             // Create output file
@@ -109,13 +108,15 @@ public class Main {
         // Do the iters
         for (int i = 0; i < iterations; i++) {
             Instant startTime = Instant.now();
+            ArrayList<Object[]> records = new ArrayList<>();
             for (int j = teamsStart; j < teamsStop; j++) {
                 for (int k = matchesStart; k < Math.ceil(j / 2.0) * 2 - 2; k++) {
-                    outWriter.csvPrinter.printRecord(
+                    records.add(new Object[]{
                             k, j, getDistortions(j, k)
-                    );
+                    });
                 }
             }
+            outWriter.csvPrinter.printRecords(records);
             Instant endTime = Instant.now();
             System.out.printf("Iteration %d took %4.5f seconds\n", i, Duration.between(startTime, endTime).toNanos()/1000000000.0);
         }
@@ -124,8 +125,41 @@ public class Main {
         outWriter.close();
     }
 
-    public static void main(String[] args) throws Exception {
-        measureCombinedDistortions(4,10,32,1);
+    private static void helpCommand() {
+        String usageString = "Usage: java -jar RGLHighlanderMatchPointSimulation.jar [OPTION]... <COMMAND> [<ARGS>]...";
+        String[] helpStrings = {
+                "distMatches: Measure distortions over adding matches; usage: distMatches <matchesStart> <matchesStop> "
+                + "<teamCount> <iterations>",
+                "distCombined: Measure distortions over matches and teams; usage: distCombined <matchesStart> " +
+                        "<teamsStart> <teamsStop> <iterations>"
+        };
+        System.out.println(usageString);
+        for (String helpString: helpStrings) {
+            System.out.print("   ");
+            System.out.println(helpString);
+        }
     }
 
+    public static void main(String[] args) throws Exception {
+        // Handle command line arguments
+        if (args.length == 0) {
+            helpCommand();
+            System.exit(0);
+        }
+        switch (args[0]) {
+            case "help" -> helpCommand();
+            case "distMatches" -> {
+                if (args.length == 5)
+                    measureDistortionsOverMatches(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
+                            Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+                else helpCommand();
+            }
+            case "distCombined" -> {
+                if (args.length == 5)
+                    measureCombinedDistortions(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
+                            Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+                else helpCommand();
+            }
+        }
+    }
 }
