@@ -1,7 +1,6 @@
 import math
 import operator
 import random
-import statistics
 import time
 from datetime import datetime
 
@@ -31,16 +30,15 @@ def measure_distortions_over_adding_matches(start, stop, number_of_teams, iters)
 
     try:
         for i in range(iters):
-            start_time = time.time()
+            # start_time = time.time()
             for number_of_matches in range(start, stop, 1):
                 distortion_dicts.append(
-                    {"matches": number_of_matches, "distortions": get_distortions(number_of_teams, number_of_matches),
-                     "even": 1 if number_of_matches % 2 == 0 else 0})
-            end_time = time.time()
-            print(f"Iteration {i} took time {end_time - start_time}")
+                    {"matches": number_of_matches, "distortions": get_distortions(number_of_teams, number_of_matches)})
+            # end_time = time.time()
+            # print(f"Iteration {i} took time {end_time - start_time}")
     except KeyboardInterrupt:
         df = pd.DataFrame.from_records(distortion_dicts)
-        df.to_csv(datetime.now().strftime(r'results/distortions_combined_%m%d%Y%H%M%S.csv'), index=False)
+        df.to_csv(datetime.now().strftime(r'results/distortions_matches_%m%d%Y%H%M%S.csv'), index=False)
         raise KeyboardInterrupt
 
     df = pd.DataFrame.from_records(distortion_dicts)
@@ -71,7 +69,7 @@ def measure_combined_distortions(matches_start, teams_start, teams_stop, iters):
                                              "teams": number_of_teams, "even": 1 if number_of_matches % 2 == 0 else 0,
                                              "distortions": get_distortions(number_of_teams, number_of_matches)})
             end_time = time.time()
-            print(f"Iteration {i} took time {end_time - start_time}")
+            print(f"Iteration {i} took {end_time - start_time} seconds")
     except KeyboardInterrupt:
         df = pd.DataFrame.from_records(distortion_dicts)
         df.to_csv(datetime.now().strftime(r'results/distortions_combined_%m%d%Y%H%M%S.csv'), index=False)
@@ -118,4 +116,4 @@ def measure_mean_skill_difference_per_week(number_of_teams, iters):
 
 
 if __name__ == "__main__":
-    measure_distortions_over_adding_matches(7,62,64,500)
+    measure_combined_distortions(4,10,32,1)

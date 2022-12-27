@@ -13,7 +13,7 @@ class Division:
                  debug_print=builtins.print, verbose=False, seed=None):
         """
         This constructor is used for divs that are already final, not simulated, e.g. existing divs
-        :param name: The name of the team
+        :param name: The name of the division
         :param team_list: list of TeamContexts; pass None unless you have a premade list
         :param no_of_teams: number of teams to create
         :param skill_style: way skill should be distributed - 0 for all teams have same skill, 1 for evenly distributed
@@ -92,10 +92,10 @@ class Division:
             for pairing in week:
                 my_match = self.run_match(pairing[0], pairing[1], koth)
                 printed += " " + str(my_match)
-            if self.verbose:
-                print(printed)
-                print(self)
-                print()
+            # if self.verbose:
+                # print(printed)
+                # print(self)
+                # print()
 
     # DFS based algorithm to run Swiss matches
     def swiss_run_matches(self, number_of_matches: int):
@@ -109,10 +109,10 @@ class Division:
                 my_match = self.run_match(pairing[0], pairing[1], week_no % 2 != 0)
                 printed += " " + str(my_match)
 
-            if self.verbose:
-                print(printed)
-                print(self)
-                print()
+            # if self.verbose:
+                # print(printed)
+                # print(self)
+                # print()
             # Sort teams_sorted
             teams_sorted = self.team_list.copy()
             teams_sorted.sort(reverse=True)
