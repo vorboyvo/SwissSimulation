@@ -1,3 +1,5 @@
+package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -11,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class Main {
@@ -43,12 +46,13 @@ public class Main {
 
     /**
      * Gets distortions per team in a single simulated division.
-     * @param teamCount Number of teams
+     *
+     * @param teamCount  Number of teams
      * @param matchCount Number of matches; 0 for round-robin, otherwise capped at teamCount-2 or teamCount-3, if
      *                   teamCount is odd or even respectively.
      * @return the absolute value of the sum of all distortions, divided by the number of teams.
      */
-    private static double getDistortions(int teamCount, int matchCount) {
+    private static List<Integer> getDistortions(int teamCount, int matchCount) {
         Division main = new Division(
                 "Main",
                 null,
@@ -73,10 +77,9 @@ public class Main {
             return teams.indexOf(team);
         }).toList();
         // Get distortions
-        List<Integer> distortions = IntStream.range(0, main.getTeamList().size())
-                .mapToObj(i -> i - teamSkillRanks.get(i)).toList();
         // Sum abs value of distortions
-        return distortions.stream().mapToDouble(i->Math.abs(i)/(double) main.getTeamList().size()).sum();
+        return IntStream.range(0, main.getTeamList().size())
+                .mapToObj(i -> i - teamSkillRanks.get(i)).toList();
     }
 
     /**
@@ -86,14 +89,19 @@ public class Main {
      * @param teamCount Number of teams to keep constant
      * @param iterations Number of times to run
      */
-    private static void measureDistortionsOverMatches(int start, int stop, int teamCount, int iterations) throws IOException {
+    public static void measureDistortionsOverMatches(int start, int stop, int teamCount, int iterations)
+            throws IOException {
         OutWriter outWriter = new OutWriter("distortions_matches", "matches", "distortions");
 
         // Do the iters
         for (int i = 0; i < iterations; i++) {
             for (int j = start; j < stop; j++) {
+                List<Integer> distortions = getDistortions(teamCount, j);
                 outWriter.csvPrinter.printRecord(
-                        j, getDistortions(teamCount, j)
+                        j,
+                        String.format("%3.5f",
+                                distortions.stream().mapToDouble(k->Math.abs(k)/(double) distortions.size()).sum()
+                        )
                 );
             }
         }
@@ -102,7 +110,8 @@ public class Main {
         outWriter.close();
     }
 
-    private static void measureCombinedDistortions(int matchesStart, int teamsStart, int teamsStop, int iterations) throws IOException {
+    public static void measureCombinedDistortions(int matchesStart, int matchesStop, int teamsStart, int teamsStop,
+                                                  int iterations) throws IOException {
         OutWriter outWriter = new OutWriter("distortions_combined", "matches","teams","distortions");
 
         // Do the iters
@@ -110,15 +119,67 @@ public class Main {
             Instant startTime = Instant.now();
             ArrayList<Object[]> records = new ArrayList<>();
             for (int j = teamsStart; j < teamsStop; j++) {
-                for (int k = matchesStart; k < Math.ceil(j / 2.0) * 2 - 2; k++) {
+                for (int k = matchesStart; k < (matchesStop < 0 ? Math.ceil(j / 2.0) * 2 - 2 : matchesStop); k++) {
+                    List<Integer> distortions = getDistortions(j, k);
                     records.add(new Object[]{
-                            k, j, getDistortions(j, k)
+                            k,
+                            j,
+                            String.format("%3.5f",
+                                    distortions.stream().mapToDouble(l->Math.abs(l)/(double) distortions.size()).sum()
+                            )
                     });
                 }
             }
             outWriter.csvPrinter.printRecords(records);
             Instant endTime = Instant.now();
-            System.out.printf("Iteration %d took %4.5f seconds\n", i, Duration.between(startTime, endTime).toNanos()/1000000000.0);
+            long time = Duration.between(startTime, endTime).toNanos();
+            if (i % Math.pow(10.0, Math.floor(Math.log10(iterations-1))) == 0
+                    || time > TimeUnit.SECONDS.toNanos(1L))
+                System.out.printf("Iteration %d took %4.5f seconds\n", i, time/1000000000.0);
+        }
+
+        // Output CSV
+        outWriter.close();
+    }
+
+    public static void measureCombinedTopHalfDistortions(int matchesStart, int matchesStop, int teamsStart,
+                                                         int teamsStop, int iterations) throws IOException {
+        OutWriter outWriter = new OutWriter(
+                "distortions_combined",
+                "matches",
+                "teams",
+                "distortionstophalf",
+                "distortionstoptwothirds",
+                "distortions"
+                );
+
+        // Do the iters
+        for (int i = 0; i < iterations; i++) {
+            Instant startTime = Instant.now();
+            ArrayList<Object[]> records = new ArrayList<>();
+            for (int j = teamsStart; j < teamsStop; j++) {
+                for (int k = matchesStart; k < (matchesStop < 0 ? Math.ceil(j / 2.0) * 2 - 2 : matchesStop); k++) {
+                    List<Integer> distortions = getDistortions(j, k);
+                    int halfTeams = (int) Math.round(j/2.0);
+                    int twoThirdsTeams = (int) Math.round(2*j/3.0);
+                    records.add(new Object[]{
+                            k,
+                            j,
+                            String.format("%3.5f", distortions.subList(0, (int) Math.round(j/2.0))
+                                    .stream().mapToDouble(l->Math.abs(l)/(double) halfTeams).sum()),
+                            String.format("%3.5f", distortions.subList(0, (int) Math.round(2*j/3.0))
+                                    .stream().mapToDouble(l->Math.abs(l)/(double) twoThirdsTeams).sum()),
+                            String.format("%3.5f", distortions
+                                    .stream().mapToDouble(l->Math.abs(l)/(double) distortions.size()).sum())
+                    });
+                }
+            }
+            outWriter.csvPrinter.printRecords(records);
+            Instant endTime = Instant.now();
+            long time = Duration.between(startTime, endTime).toNanos();
+            if (i % Math.pow(10.0, Math.floor(Math.log10(iterations-1))) == 0
+                    || time > TimeUnit.SECONDS.toNanos(1L))
+                System.out.printf("Iteration %d took %4.5f seconds\n", i, time/1000000000.0);
         }
 
         // Output CSV
@@ -131,7 +192,8 @@ public class Main {
                 "distMatches: Measure distortions over adding matches; usage: distMatches <matchesStart> <matchesStop> "
                 + "<teamCount> <iterations>",
                 "distCombined: Measure distortions over matches and teams; usage: distCombined <matchesStart> " +
-                        "<teamsStart> <teamsStop> <iterations>"
+                        "<matchesStop> <teamsStart> <teamsStop> <iterations>" +
+                        "; if matchesStop is -1 it is auto-determined"
         };
         System.out.println(usageString);
         for (String helpString: helpStrings) {
@@ -155,9 +217,9 @@ public class Main {
                 else helpCommand();
             }
             case "distCombined" -> {
-                if (args.length == 5)
+                if (args.length == 6)
                     measureCombinedDistortions(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-                            Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+                            Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]));
                 else helpCommand();
             }
         }

@@ -1,3 +1,5 @@
+package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+
 import java.util.Random;
 
 public class Match {

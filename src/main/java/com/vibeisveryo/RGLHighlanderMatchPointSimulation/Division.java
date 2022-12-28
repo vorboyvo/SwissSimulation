@@ -1,3 +1,5 @@
+package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+
 import java.util.*;
 
 public class Division {
@@ -37,19 +39,19 @@ public class Division {
         // Skill style 0: teams even
         if (skillStyle == 0) {
             for (int i = 0; i < noOfTeams; i++) {
-                this.teamList.add(new TeamContext(new Team("Team " + i, 0)));
+                this.teamList.add(new TeamContext(new Team("com.vibeisveryo.RGLHighlanderMatchPointSimulation.Team " + i, 0)));
             }
         // Skill style 1: teams equally spaced out
         } else if (skillStyle == 1) {
             for (int i = 0; i < noOfTeams; i++) {
                 double skill = ((double) i / (noOfTeams - 1)) * 6 - 3;
-                this.teamList.add(new TeamContext(new Team("Team " + i, skill)));
+                this.teamList.add(new TeamContext(new Team("com.vibeisveryo.RGLHighlanderMatchPointSimulation.Team " + i, skill)));
             }
         // Skill style 2: Skills generated according to normal distribution
         } else if (skillStyle == 2) {
             for (int i = 0; i < noOfTeams; i++) {
                 double skill = generator.nextGaussian();
-                this.teamList.add(new TeamContext(new Team("Team " + i, skill)));
+                this.teamList.add(new TeamContext(new Team("com.vibeisveryo.RGLHighlanderMatchPointSimulation.Team " + i, skill)));
             }
         } else {
             throw new IllegalArgumentException("Skill style invalid: " + skillStyle);
@@ -90,7 +92,7 @@ public class Division {
             List<TeamContext[]> week = new ArrayList<>();
             List<TeamContext> currentTeamList = new ArrayList<>(rotatingTeams);
             currentTeamList.add(0, fixedTeam);
-            for (int j = 0; j < Math.round(this.teamList.size() / 2.0); j++) {
+            for (int j = 0; j < Math.round(numberOfTeams / 2.0); j++) {
                 week.add(new TeamContext[]{currentTeamList.get(j),
                         currentTeamList.get(currentTeamList.size() - j - 1)
                 });
@@ -162,7 +164,7 @@ public class Division {
 
     /**
      * Run a single week's matches. Wraps a recursive method that uses DFS to find a working set of matches.
-     * @return List of pairs of TeamContext for that week's matches, where the pair's index 0 is home and 1 is away.
+     * @return List of pairs of com.vibeisveryo.RGLHighlanderMatchPointSimulation.TeamContext for that week's matches, where the pair's index 0 is home and 1 is away.
      */
     private List<TeamContext[]> scheduleWeek() {
         // Assume team list is sorted. Otherwise, we have other issues going on.
@@ -197,7 +199,7 @@ public class Division {
          * - If either team is already in the schedule for this week, it's red.
          * -- We're not using a proper schedule (list of tuples) here so don't use team_search_in_schedule
          * - If either team has already played the other, it's red.
-         * -- Can use Team.teams_faced to determine this
+         * -- Can use com.vibeisveryo.RGLHighlanderMatchPointSimulation.Team.teams_faced to determine this
          * Do not visit red nodes (do not add them to schedule) and do not traverse their children.
          * Visit green nodes but REVERSIBLY - We want to be able to backtrack if we don't reach a green leaf!
          * In effect, we're building an ordered array where even indices (starting 0) are home & the following odd
