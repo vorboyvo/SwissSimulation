@@ -21,12 +21,7 @@ public class Match {
         double diff = homeSkill - awaySkill;
         double homeWinChance = 1 / (1 + Math.exp(-2 * diff));
 
-        Random random;
-        if (seed != -1) {
-            random = new Random(seed);
-        } else {
-            random = new Random();
-        }
+        Random random = seed == -1L ? new Random() : new Random(seed);
 
         // Run first to 4 on koth or 2 on stopwatch
         int winLimit;
@@ -76,7 +71,7 @@ public class Match {
 
     @Override
     public String toString() {
-        return homeMatchResult.roundsWon() + "-" + awayMatchResult.roundsWon();
+        return String.format("%d-%d",homeMatchResult.roundsWon(), awayMatchResult.roundsWon());
     }
 
     private static boolean runRound(double homeWinChance, Random random) {

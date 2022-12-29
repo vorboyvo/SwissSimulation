@@ -20,7 +20,7 @@ public class Division {
      * @param seed Seed to use for RNG if deterministic results desired; use -1L if we want random
      */
     public Division(String name, List<TeamContext> teamList, int noOfTeams, int skillStyle,
-                    int verbose, Long seed) {
+                       int verbose, Long seed) {
         this.name = name;
         if (teamList != null) {
             this.teamList = teamList;
@@ -39,25 +39,25 @@ public class Division {
         // Skill style 0: teams even
         if (skillStyle == 0) {
             for (int i = 0; i < noOfTeams; i++) {
-                this.teamList.add(new TeamContext(new Team("com.vibeisveryo.RGLHighlanderMatchPointSimulation.Team " + i, 0)));
+                this.teamList.add(new TeamContext(new Team("Team " + i, 0)));
             }
-        // Skill style 1: teams equally spaced out
+            // Skill style 1: teams equally spaced out
         } else if (skillStyle == 1) {
             for (int i = 0; i < noOfTeams; i++) {
                 double skill = ((double) i / (noOfTeams - 1)) * 6 - 3;
-                this.teamList.add(new TeamContext(new Team("com.vibeisveryo.RGLHighlanderMatchPointSimulation.Team " + i, skill)));
+                this.teamList.add(new TeamContext(new Team("Team " + i, skill)));
             }
-        // Skill style 2: Skills generated according to normal distribution
+            // Skill style 2: Skills generated according to normal distribution
         } else if (skillStyle == 2) {
             for (int i = 0; i < noOfTeams; i++) {
                 double skill = generator.nextGaussian();
-                this.teamList.add(new TeamContext(new Team("com.vibeisveryo.RGLHighlanderMatchPointSimulation.Team " + i, skill)));
+                this.teamList.add(new TeamContext(new Team("Team " + i, skill)));
             }
         } else {
             throw new IllegalArgumentException("Skill style invalid: " + skillStyle);
         }
 
-        Collections.shuffle(this.teamList);
+        Collections.shuffle(this.teamList, generator);
 
         // Add bye week for odd number of teams
         if (this.teamList.size() % 2 == 1) {
@@ -65,13 +65,21 @@ public class Division {
         }
     }
 
-    public Match runMatch(TeamContext homeTeam, TeamContext awayTeam, boolean koth) {
+    Match runMatch(TeamContext homeTeam, TeamContext awayTeam, boolean koth) {
         Match myMatch = new Match(homeTeam.getTeam().getSkill(), awayTeam.getTeam().getSkill(), koth, seed);
         homeTeam.addMatch(myMatch.getHomeResult());
         awayTeam.addMatch(myMatch.getAwayResult());
         homeTeam.getTeamsFaced().add(awayTeam);
         awayTeam.getTeamsFaced().add(homeTeam);
         return myMatch;
+    }
+
+    Division addPreviousPair(TeamContext... args) {
+        if (args.length != 2) throw new IllegalArgumentException("Must have two arguments!");
+        args[0].getTeamsFaced().add(args[1]);
+        args[1].getTeamsFaced().add(args[0]);
+        // Return this for convenience
+        return this;
     }
 
     /**
@@ -164,9 +172,9 @@ public class Division {
 
     /**
      * Run a single week's matches. Wraps a recursive method that uses DFS to find a working set of matches.
-     * @return List of pairs of com.vibeisveryo.RGLHighlanderMatchPointSimulation.TeamContext for that week's matches, where the pair's index 0 is home and 1 is away.
+     * @return List of pairs of TeamContext for that week's matches, where the pair's index 0 is home and 1 is away.
      */
-    private List<TeamContext[]> scheduleWeek() {
+    List<TeamContext[]> scheduleWeek() {
         // Assume team list is sorted. Otherwise, we have other issues going on.
         TeamContext[] scheduleUnpacked = dfsFindSchedule(new TeamContext[0], this.teamList.toArray(new TeamContext[0]),
                 true, 0, null);
@@ -190,7 +198,7 @@ public class Division {
      * @param scheduleFirst Which team to attempt scheduling first
      * @return Full schedule, or null if none was found down this path
      */
-    private TeamContext[] dfsFindSchedule(TeamContext[] schedule, TeamContext[] remainingTeams, boolean home,
+    TeamContext[] dfsFindSchedule(TeamContext[] schedule, TeamContext[] remainingTeams, boolean home,
                                           int depth, TeamContext scheduleFirst
     ) {
         /*
@@ -199,7 +207,7 @@ public class Division {
          * - If either team is already in the schedule for this week, it's red.
          * -- We're not using a proper schedule (list of tuples) here so don't use team_search_in_schedule
          * - If either team has already played the other, it's red.
-         * -- Can use com.vibeisveryo.RGLHighlanderMatchPointSimulation.Team.teams_faced to determine this
+         * -- Can use Team.teams_faced to determine this
          * Do not visit red nodes (do not add them to schedule) and do not traverse their children.
          * Visit green nodes but REVERSIBLY - We want to be able to backtrack if we don't reach a green leaf!
          * In effect, we're building an ordered array where even indices (starting 0) are home & the following odd
