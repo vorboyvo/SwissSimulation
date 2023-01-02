@@ -3,6 +3,7 @@ package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
 import java.util.Random;
 
 public class Match {
+    private static final int ODDS_SCALING_FACTOR = 2;
     private final MatchResult homeMatchResult;
     private final MatchResult awayMatchResult;
 
@@ -19,23 +20,17 @@ public class Match {
      */
     public Match(double homeSkill, double awaySkill, boolean koth, Long seed) {
         double diff = homeSkill - awaySkill;
-        double homeWinChance = 1 / (1 + Math.exp(-2 * diff));
+        double homeWinChance = 1 / (1 + Math.exp(-1 * ODDS_SCALING_FACTOR * diff));
 
         Random random = seed == -1L ? new Random() : new Random(seed);
 
         // Run first to 4 on koth or 2 on stopwatch
-        int winLimit;
-        if (koth) {
-            winLimit = 4;
-        } else {
-            winLimit = 2;
-        }
+        int winLimit = koth ? 4 : 2;
 
         int homeRoundsWon = 0;
         int awayRoundsWon = 0;
         while (homeRoundsWon < winLimit && awayRoundsWon < winLimit) {
-            boolean roundOutcome;
-            roundOutcome = runRound(homeWinChance, random);
+            boolean roundOutcome = runRound(homeWinChance, random);
             if (roundOutcome) {
                 homeRoundsWon += 1;
             } else {

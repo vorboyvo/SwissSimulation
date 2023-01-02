@@ -3,55 +3,66 @@ package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
 import java.util.*;
 
 public class Division {
+    enum VerbosityLevel {
+        NONE(0),
+        MINIMAL(1),
+        DETAILED(2),
+        FULL(3);
+        public final int value;
+        VerbosityLevel(int i) {
+            value = i;
+        }
+    }
+
+    enum SkillStyle {
+        IDENTICAL,
+        UNIFORM,
+        RANDOM_NORMAL,
+        TRUE_RANDOM,
+    }
+
     private final String name;
-    private final List<TeamContext> teamList; //Should always be sorted if any teams are modified!
-    private final int verbose;
+    private final List<Team> teamList; // Should always be sorted by any action modifying the team list!
+    private final VerbosityLevel verbosityLevel;
     private final long seed;
 
     /**
      * This constructor is used for divs that are already final, not simulated, e.g. existing divs.
      *
      * @param name The name of the division
-     * @param teamList list of TeamContexts; pass null unless you have a premade list
      * @param noOfTeams number of teams to create
      * @param skillStyle way skill should be distributed - 0 for all teams have same skill, 1 for evenly distributed
      *                   from -3 to 3, 2 for normally distributed
-     * @param verbose Verbosity level; 0 silent, 1 basic, 2 detailed
      * @param seed Seed to use for RNG if deterministic results desired; use -1L if we want random
      */
-    public Division(String name, List<TeamContext> teamList, int noOfTeams, int skillStyle,
-                       int verbose, Long seed) {
+    public Division(String name, int noOfTeams, SkillStyle skillStyle, Long seed) {
         this.name = name;
-        if (teamList != null) {
-            this.teamList = teamList;
-            this.verbose = verbose;
-            this.seed = seed;
-            this.teamList.sort(Collections.reverseOrder());
-            return;
-        } else {
-            this.teamList = new ArrayList<>();
-        }
-        this.verbose = verbose;
+        this.teamList = new ArrayList<>();
+        this.verbosityLevel = VerbosityLevel.NONE;
         this.seed = seed;
 
         // Creates teams according to skill style
         Random generator = (seed == -1) ? new Random() : new Random(seed);
-        // Skill style 0: teams even
-        if (skillStyle == 0) {
+        if (skillStyle == SkillStyle.IDENTICAL) {
             for (int i = 0; i < noOfTeams; i++) {
-                this.teamList.add(new TeamContext(new Team("Team " + i, 0)));
+                this.teamList.add(new Team("Team " + i, 0));
             }
             // Skill style 1: teams equally spaced out
-        } else if (skillStyle == 1) {
+        } else if (skillStyle == SkillStyle.UNIFORM) {
             for (int i = 0; i < noOfTeams; i++) {
                 double skill = ((double) i / (noOfTeams - 1)) * 6 - 3;
-                this.teamList.add(new TeamContext(new Team("Team " + i, skill)));
+                this.teamList.add(new Team("Team " + i, skill));
             }
             // Skill style 2: Skills generated according to normal distribution
-        } else if (skillStyle == 2) {
+        } else if (skillStyle == SkillStyle.RANDOM_NORMAL) {
             for (int i = 0; i < noOfTeams; i++) {
                 double skill = generator.nextGaussian();
-                this.teamList.add(new TeamContext(new Team("Team " + i, skill)));
+                this.teamList.add(new Team("Team " + i, skill));
+            }
+        } else if (skillStyle == SkillStyle.TRUE_RANDOM) {
+            for (int i = 0; i < noOfTeams; i++) {
+                double skill = generator.nextDouble(-3, 3);
+                this.teamList.add(new Team("Team " + i, skill));
             }
         } else {
             throw new IllegalArgumentException("Skill style invalid: " + skillStyle);
@@ -61,11 +72,18 @@ public class Division {
 
         // Add bye week for odd number of teams
         if (this.teamList.size() % 2 == 1) {
-            this.teamList.add(new TeamContext(new ByeTeam()));
+            this.teamList.add(new ByeTeam());
         }
     }
 
-    Match runMatch(TeamContext homeTeam, TeamContext awayTeam, boolean koth) {
+    public Division(String name, List<Team> teamList, Long seed) {
+        this.name = name;
+        this.teamList = teamList;
+        this.verbosityLevel = VerbosityLevel.NONE;
+        this.seed = seed;
+    }
+
+    Match runMatch(Team homeTeam, Team awayTeam, boolean koth) {
         Match myMatch = new Match(homeTeam.getTeam().getSkill(), awayTeam.getTeam().getSkill(), koth, seed);
         homeTeam.addMatch(myMatch.getHomeResult());
         awayTeam.addMatch(myMatch.getAwayResult());
@@ -74,7 +92,7 @@ public class Division {
         return myMatch;
     }
 
-    Division addPreviousPair(TeamContext... args) {
+    Division addPreviousPair(Team... args) {
         if (args.length != 2) throw new IllegalArgumentException("Must have two arguments!");
         args[0].getTeamsFaced().add(args[1]);
         args[1].getTeamsFaced().add(args[0]);
@@ -87,21 +105,21 @@ public class Division {
      * div size - 1.
      */
     public void rrRunMatches() {
-        List<List<TeamContext[]>> weekList = new ArrayList<>();
+        List<List<Team[]>> weekList = new ArrayList<>();
 
         // Generate matchups
         // Circle method for generating matchups
         // https://en.wikipedia.org/wiki/Round-robin_tournament#Circle_method
         int numberOfTeams = this.teamList.size();
-        TeamContext fixedTeam = this.teamList.get(0);
-        List<TeamContext> rotatingTeams = this.teamList.subList(1,numberOfTeams);
+        Team fixedTeam = this.teamList.get(0);
+        List<Team> rotatingTeams = this.teamList.subList(1,numberOfTeams);
 
         for (int i = 0; i < numberOfTeams - 1; i++) {
-            List<TeamContext[]> week = new ArrayList<>();
-            List<TeamContext> currentTeamList = new ArrayList<>(rotatingTeams);
+            List<Team[]> week = new ArrayList<>();
+            List<Team> currentTeamList = new ArrayList<>(rotatingTeams);
             currentTeamList.add(0, fixedTeam);
             for (int j = 0; j < Math.round(numberOfTeams / 2.0); j++) {
-                week.add(new TeamContext[]{currentTeamList.get(j),
+                week.add(new Team[]{currentTeamList.get(j),
                         currentTeamList.get(currentTeamList.size() - j - 1)
                 });
             }
@@ -111,11 +129,11 @@ public class Division {
 
         // Run matches
         int i = 0;
-        for (List<TeamContext[]> week: weekList) {
+        for (List<Team[]> week: weekList) {
             // StringBuilder printed = new StringBuilder();
             // printed.append("Week ").append(i).append(": ").append(week);
             boolean koth = i % 2 != 0;
-            for (TeamContext[] pairing: week) {
+            for (Team[] pairing: week) {
                 Match match = this.runMatch(pairing[0], pairing[1], koth);
                 // printed.append(" ").append(match);
             }
@@ -144,11 +162,11 @@ public class Division {
         // Play the week's matches and make necessary adjustments for each week
         for (int weekNo = 0; weekNo < matchCount; weekNo++) {
             // Schedule matches
-            List<TeamContext[]> schedule = this.scheduleWeek();
+            List<Team[]> schedule = this.scheduleWeek();
 
             // Run matches and get skill diffs
             int i = 0;
-            for (TeamContext[] pairing: schedule) {
+            for (Team[] pairing: schedule) {
                 if (getSkill) skillDiffs[weekNo][i] = Math.abs(
                         pairing[0].getTeam().getSkill() - pairing[1].getTeam().getSkill()
                 );
@@ -172,18 +190,19 @@ public class Division {
 
     /**
      * Run a single week's matches. Wraps a recursive method that uses DFS to find a working set of matches.
+     *
      * @return List of pairs of TeamContext for that week's matches, where the pair's index 0 is home and 1 is away.
      */
-    List<TeamContext[]> scheduleWeek() {
+    List<Team[]> scheduleWeek() {
         // Assume team list is sorted. Otherwise, we have other issues going on.
-        TeamContext[] scheduleUnpacked = dfsFindSchedule(new TeamContext[0], this.teamList.toArray(new TeamContext[0]),
+        Team[] scheduleUnpacked = dfsFindSchedule(new Team[0], this.teamList.toArray(new Team[0]),
                 true, 0, null);
         if (scheduleUnpacked == null) throw new NullPointerException("Could not find a valid set of matches!");
         // Pack schedule into list of pairs
-        List<TeamContext[]> schedule = new ArrayList<>(scheduleUnpacked.length/2);
-        Iterator<TeamContext> packer = Arrays.stream(scheduleUnpacked).iterator();
+        List<Team[]> schedule = new ArrayList<>(scheduleUnpacked.length/2);
+        Iterator<Team> packer = Arrays.stream(scheduleUnpacked).iterator();
         while (packer.hasNext()) {
-            TeamContext[] pairing = {packer.next(), packer.next()};
+            Team[] pairing = {packer.next(), packer.next()};
             schedule.add(pairing);
         }
         return schedule;
@@ -198,21 +217,9 @@ public class Division {
      * @param scheduleFirst Which team to attempt scheduling first
      * @return Full schedule, or null if none was found down this path
      */
-    TeamContext[] dfsFindSchedule(TeamContext[] schedule, TeamContext[] remainingTeams, boolean home,
-                                          int depth, TeamContext scheduleFirst
+    Team[] dfsFindSchedule(Team[] schedule, Team[] remainingTeams, boolean home,
+                           int depth, Team scheduleFirst
     ) {
-        /*
-         * Tree of team pairs, depth-first traversal with red and green nodes
-         * Use pairs to determine what is a red node.
-         * - If either team is already in the schedule for this week, it's red.
-         * -- We're not using a proper schedule (list of tuples) here so don't use team_search_in_schedule
-         * - If either team has already played the other, it's red.
-         * -- Can use Team.teams_faced to determine this
-         * Do not visit red nodes (do not add them to schedule) and do not traverse their children.
-         * Visit green nodes but REVERSIBLY - We want to be able to backtrack if we don't reach a green leaf!
-         * In effect, we're building an ordered array where even indices (starting 0) are home & the following odd
-         * indices (starting 1) are away to their index - 1. So we do additional checks for redness if home False.
-         */
 
         if (scheduleFirst == null) scheduleFirst = remainingTeams[0];
 
@@ -220,7 +227,7 @@ public class Division {
         if (remainingTeams.length == 1) {
             if (home) throw new RuntimeException("Odd number of teams!");
             // Append scheduled team to schedule and return
-            TeamContext[] newSchedule = new TeamContext[schedule.length+1];
+            Team[] newSchedule = new Team[schedule.length+1];
             newSchedule[schedule.length] = scheduleFirst;
             System.arraycopy(schedule, 0, newSchedule, 0, schedule.length);
             return newSchedule;
@@ -228,14 +235,14 @@ public class Division {
         // Recursive case 1: On away -> Add current Away team to schedule, recur on rest
         if (!home) {
             // Append scheduled team to schedule
-            TeamContext[] newSchedule = new TeamContext[schedule.length + 1];
+            Team[] newSchedule = new Team[schedule.length + 1];
             newSchedule[schedule.length] = scheduleFirst;
             System.arraycopy(schedule, 0, newSchedule, 0, schedule.length);
             // Recur on remainingTeams without scheduled team
-            TeamContext[] newRemainingTeams = new TeamContext[remainingTeams.length-1];
+            Team[] newRemainingTeams = new Team[remainingTeams.length-1];
             int j = 0;
             //  Copy remainingTeams to newRemainingTeams excluding newly scheduled team
-            for (TeamContext temp : remainingTeams) {
+            for (Team temp : remainingTeams) {
                 if (temp != scheduleFirst) {
                     newRemainingTeams[j] = temp;
                     j++;
@@ -246,16 +253,16 @@ public class Division {
         // Recursive case 2: On home -> Look for an opponent to match home with by recurring, go down list of teams if
         // none found
         else {
-            TeamContext[] newRemainingTeams = Arrays.copyOfRange(remainingTeams,1,remainingTeams.length);
-            TeamContext homeTeam = remainingTeams[0];
-            for (TeamContext team : newRemainingTeams) {
+            Team[] newSchedule = new Team[schedule.length + 1];
+            // Append home team to schedule
+            newSchedule[schedule.length] = scheduleFirst;
+            System.arraycopy(schedule, 0, newSchedule, 0, schedule.length);
+            Team[] newRemainingTeams = Arrays.copyOfRange(remainingTeams,1,remainingTeams.length);
+            Team homeTeam = remainingTeams[0];
+            for (Team team : newRemainingTeams) {
                 if (homeTeam.getTeamsFaced().contains(team)) continue;
-                // Append home team to schedule
-                TeamContext[] newSchedule = new TeamContext[schedule.length + 1];
-                newSchedule[schedule.length] = scheduleFirst;
-                System.arraycopy(schedule, 0, newSchedule, 0, schedule.length);
                 // Recur on newRemainingTeams
-                TeamContext[] path = this.dfsFindSchedule(newSchedule, newRemainingTeams, false, depth + 1, team);
+                Team[] path = this.dfsFindSchedule(newSchedule, newRemainingTeams, false, depth + 1, team);
                 if (path!=null) return path;
             }
         }
@@ -272,7 +279,7 @@ public class Division {
         StringBuilder returned = new StringBuilder(String.format("Division %s with %d teams\n", this.name,
                 this.teamList.size()));
         returned.append("Name,Skill,W,L,RW,RL,MP,Teams Faced\n");
-        for (TeamContext team: this.teamList) {
+        for (Team team: this.teamList) {
             returned.append(team.toString())
                     .append(',')
                     .append(team.getTeamsFacedNames())
@@ -281,7 +288,7 @@ public class Division {
         return returned.toString();
     }
 
-    public List<TeamContext> getTeamList() {
+    public List<Team> getTeamList() {
         return teamList;
     }
 }

@@ -11,14 +11,14 @@ import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class Main {
-    public static final int SKILL_STYLE = 1;
-    public static final boolean MEASURE_TIME = false;
+    public static final Division.SkillStyle SKILL_STYLE = Division.SkillStyle.UNIFORM;
 
     static class OutWriter {
         FileWriter outputWriter;
@@ -55,10 +55,8 @@ public class Main {
     private static List<Integer> getDistortions(int teamCount, int matchCount) {
         Division main = new Division(
                 "Main",
-                null,
                 teamCount,
                 SKILL_STYLE,
-                0,
                 -1L
         );
         if (matchCount == 0) {
@@ -69,7 +67,7 @@ public class Main {
 
         // Get team skill rank
         List<Integer> teamSkillRanks = main.getTeamList().stream().map(team -> {
-            List<TeamContext> teams = new ArrayList<>(main.getTeamList());
+            List<Team> teams = new ArrayList<>(main.getTeamList());
             teams.sort(Collections.reverseOrder((o1, o2) -> {
                 double diff = o1.getTeam().getSkill() - o2.getTeam().getSkill();
                 return (int) ((diff >= 0) ? Math.ceil(diff) : Math.floor(diff));
@@ -110,7 +108,7 @@ public class Main {
         outWriter.close();
     }
 
-    public static void measureCombinedDistortions(int matchesStart, int matchesStop, int teamsStart, int teamsStop,
+    public static void measureCombinedDistortions(int matchesStart, int teamsStart, int teamsStop,
                                                   int iterations) throws IOException {
         OutWriter outWriter = new OutWriter("distortions_combined", "matches","teams","distortions");
 
@@ -119,7 +117,7 @@ public class Main {
             Instant startTime = Instant.now();
             ArrayList<Object[]> records = new ArrayList<>();
             for (int j = teamsStart; j < teamsStop; j++) {
-                for (int k = matchesStart; k < (matchesStop < 0 ? Math.ceil(j / 2.0) * 2 - 2 : matchesStop); k++) {
+                for (int k = matchesStart; k < Math.ceil(j / 2.0) * 2 - 2; k++) {
                     List<Integer> distortions = getDistortions(j, k);
                     records.add(new Object[]{
                             k,
@@ -186,14 +184,71 @@ public class Main {
         outWriter.close();
     }
 
+    private static void bench(int iters, int teamCount, int matchCount) {
+        int[] durations = new int[iters];
+        for (int i = 0; i < iters; i++) {
+            Instant start = Instant.now();
+            Division main = new Division("Main", teamCount, SKILL_STYLE, -1L);
+            main.swissRunMatches(matchCount);
+            Instant stop = Instant.now();
+            durations[i] = (int) Duration.between(start, stop).toMillis();
+        }
+        int min = Integer.MAX_VALUE;
+        int max = 0;
+        double mean = 0;
+        double vari = 0;
+        double stdev;
+        double median = 0;
+
+        for (int i = 0; i < iters; i++) {
+            mean += durations[i];
+            if (durations[i] < min) min = durations[i];
+            if (durations[i] > max) max = durations[i];
+        }
+        mean /= iters;
+
+        for (int i = 0; i < iters; i++) {
+            vari += Math.pow(durations[i] - mean, 2);
+        }
+        vari /= iters;
+        stdev = Math.sqrt(vari);
+
+        Arrays.sort(durations);
+        if (iters % 2 == 0) {
+            median = (durations[iters/2-1] + durations[iters/2]) / 2.0;
+        } else {
+            median = durations[iters/2];
+        }
+
+        System.out.printf("min: %d max: %d mean: %.3f stdev: %.3f median: %.3f\n", min, max, mean, stdev, median);
+    }
+
+    private static void benchMatches(int iters, int maxTeams) {
+        for (int teamCount = 10; teamCount <= maxTeams; teamCount+=2) {
+            Instant start = Instant.now();
+            int matchCount = (int) Math.ceil(teamCount/2.0)*2-3;
+            for (int i = 0; i < iters; i++) {
+                Division divMain = new Division("Main", teamCount, SKILL_STYLE, -1L);
+                divMain.swissRunMatches(matchCount);
+            }
+            Instant end = Instant.now();
+            System.out.printf("%d teams and %d matches took %d milliseconds\n", teamCount, matchCount,
+                    Duration.between(start, end).toMillis()
+            );
+        }
+    }
+
     private static void helpCommand() {
         String usageString = "Usage: java -jar RGLHighlanderMatchPointSimulation.jar [OPTION]... <COMMAND> [<ARGS>]...";
         String[] helpStrings = {
                 "distMatches: Measure distortions over adding matches; usage: distMatches <matchesStart> <matchesStop> "
                 + "<teamCount> <iterations>",
                 "distCombined: Measure distortions over matches and teams; usage: distCombined <matchesStart> " +
-                        "<matchesStop> <teamsStart> <teamsStop> <iterations>" +
-                        "; if matchesStop is -1 it is auto-determined"
+                        "<teamsStart> <teamsStop> <iterations>",
+                "benchmarkSeason: Benchmarks the performance of a season over many iterations; usage: " +
+                        "benchmarkSeason <iterations> <teams> <matches>",
+                "benchmarkMatches: Benchmarks how long team sizes take in relation to each other; usage: " +
+                        "benchmarkMatches <iterations> <maxTeams>"
         };
         System.out.println(usageString);
         for (String helpString: helpStrings) {
@@ -208,19 +263,35 @@ public class Main {
             helpCommand();
             System.exit(0);
         }
-        switch (args[0]) {
+        switch (args[0].toLowerCase()) {
             case "help" -> helpCommand();
-            case "distMatches" -> {
+            case "distmatches" -> {
                 if (args.length == 5)
                     measureDistortionsOverMatches(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
                             Integer.parseInt(args[3]), Integer.parseInt(args[4]));
                 else helpCommand();
             }
-            case "distCombined" -> {
-                if (args.length == 6)
+            case "distcombined" -> {
+                if (args.length == 5)
                     measureCombinedDistortions(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-                            Integer.parseInt(args[3]), Integer.parseInt(args[4]), Integer.parseInt(args[5]));
+                            Integer.parseInt(args[3]), Integer.parseInt(args[4]));
                 else helpCommand();
+            }
+            case "benchmarkseason" -> {
+                if (args.length == 4)
+                    bench(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
+                            Integer.parseInt(args[3]));
+                else if (args.length == 3)
+                    bench(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
+                            (int) (Math.ceil(Integer.parseInt(args[2]) / 2.0) * 2 - 2));
+                else bench(500, 30, 27);
+            }
+            case "benchmarkmatches" -> {
+                if (args.length == 3)
+                    benchMatches(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+                else if (args.length == 2)
+                    benchMatches(Integer.parseInt(args[1]), 999);
+                else benchMatches(100,34);
             }
         }
     }

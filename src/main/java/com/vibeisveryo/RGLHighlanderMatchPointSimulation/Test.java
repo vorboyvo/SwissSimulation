@@ -1,5 +1,7 @@
 package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,26 +32,35 @@ public class Test {
          * Expected output:
          * [[Team A, Team C], [Team B, Team E], [Team D, Team F], [Team G, Team H], [Team I, Team J], [Team K, Team N], [Team L, Team P], [Team M, Team O]]
          */
-        List<Team> teams = new ArrayList<>();
+        List<Team> teamList = new ArrayList<>();
         // Add teams
-        teams.add(new Team("Team A", 3.000)); teams.add(new Team("Team B", 2.600)); teams.add(new Team("Team C", 1.800)); teams.add(new Team("Team D", 1.000)); teams.add(new Team("Team E", 2.200)); teams.add(new Team("Team F", 1.400)); teams.add(new Team("Team G", -0.200)); teams.add(new Team("Team H",0.200)); teams.add(new Team("Team I",-0.600)); teams.add(new Team("Team J",0.600)); teams.add(new Team("Team K",-1.400)); teams.add(new Team("Team L",-1.800)); teams.add(new Team("Team M",-1.000)); teams.add(new Team("Team N",-2.200)); teams.add(new Team("Team O",-3.000)); teams.add(new Team("Team P",-2.600));
-        ArrayList<TeamContext> teamList = new ArrayList<>(List.of(teams.stream().map(TeamContext::new).toList().toArray(TeamContext[]::new)));
-        Division main = new Division("Main", teamList, 0, 0, 0, -1L);
+        teamList.add(new Team("Team A", 3.000));
+        teamList.add(new Team("Team B", 2.600));
+        teamList.add(new Team("Team C", 1.800));
+        teamList.add(new Team("Team D", 1.000));
+        teamList.add(new Team("Team E", 2.200));
+        teamList.add(new Team("Team F", 1.400));
+        teamList.add(new Team("Team G", -0.200));
+        teamList.add(new Team("Team H", 0.200));
+        teamList.add(new Team("Team I", -0.600));
+        teamList.add(new Team("Team J", 0.600));
+        teamList.add(new Team("Team K", -1.400));
+        teamList.add(new Team("Team L", -1.800));
+        teamList.add(new Team("Team M", -1.000));
+        teamList.add(new Team("Team N", -2.200));
+        teamList.add(new Team("Team O", -3.000));
+        teamList.add(new Team("Team P", -2.600));
+        Division main = new Division("Main", teamList, -1L);
 
         // Add matches
         main.addPreviousPair(teamList.get(0), teamList.get(1)).addPreviousPair(teamList.get(0), teamList.get(4)).addPreviousPair(teamList.get(0), teamList.get(5)).addPreviousPair(teamList.get(0), teamList.get(9)).addPreviousPair(teamList.get(1), teamList.get(2)).addPreviousPair(teamList.get(1), teamList.get(3)).addPreviousPair(teamList.get(1), teamList.get(7)).addPreviousPair(teamList.get(2), teamList.get(7)).addPreviousPair(teamList.get(2), teamList.get(13)).addPreviousPair(teamList.get(2), teamList.get(14)).addPreviousPair(teamList.get(3), teamList.get(8)).addPreviousPair(teamList.get(3), teamList.get(9)).addPreviousPair(teamList.get(3), teamList.get(10)).addPreviousPair(teamList.get(4), teamList.get(5)).addPreviousPair(teamList.get(4), teamList.get(12)).addPreviousPair(teamList.get(4), teamList.get(15)).addPreviousPair(teamList.get(5), teamList.get(6)).addPreviousPair(teamList.get(5), teamList.get(12)).addPreviousPair(teamList.get(6), teamList.get(9)).addPreviousPair(teamList.get(6), teamList.get(12)).addPreviousPair(teamList.get(6), teamList.get(15)).addPreviousPair(teamList.get(7), teamList.get(8)).addPreviousPair(teamList.get(7), teamList.get(13)).addPreviousPair(teamList.get(8), teamList.get(13)).addPreviousPair(teamList.get(8), teamList.get(14)).addPreviousPair(teamList.get(9), teamList.get(11)).addPreviousPair(teamList.get(10), teamList.get(11)).addPreviousPair(teamList.get(10), teamList.get(12)).addPreviousPair(teamList.get(10), teamList.get(15)).addPreviousPair(teamList.get(11), teamList.get(13)).addPreviousPair(teamList.get(11), teamList.get(14)).addPreviousPair(teamList.get(14), teamList.get(15));
 
         System.out.println(main.scheduleWeek().stream()
-                .map(a -> Arrays.deepToString(Arrays.stream(a).map(b->b.getTeam().getName()).toArray())).toList()
+                .map(a -> Arrays.deepToString(Arrays.stream(a).map(b -> b.getTeam().getName()).toArray())).toList()
         );
     }
 
     public static void main(String[] args) throws Exception {
-        /*Instant start = Instant.now();
-        Division main = new Division("Main",null,32,1,0,-1L);
-        main.swissRunMatches(26);
-        Instant stop = Instant.now();
-        System.out.println(Duration.between(start, stop).toMillis()/1000.0);*/
         testCase1();
     }
 }

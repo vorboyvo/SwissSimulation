@@ -1,25 +1,44 @@
 package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
-public class TeamContext implements Comparable<TeamContext> {
-    private Team team;
+public class Team implements Comparable<Team> {
+    private String name;
+    private double skill;
+    private boolean bye;
+
+
     private int wins;
     private int losses;
     private int roundsWon;
     private int roundsLost;
     private int matchPoints;
-    private ArrayList<TeamContext> teamsFaced;
+    private HashSet<Team> teamsFaced;
 
-    public TeamContext(Team team) {
-        this.team = team;
+    public Team(String name, double skill) {
+        this.name = name;
+        this.skill = skill;
+        this.bye = false;
         this.wins = 0;
         this.losses = 0;
         this.roundsWon = 0;
         this.roundsLost = 0;
         this.matchPoints = 0;
-        this.teamsFaced = new ArrayList<>();
+        this.teamsFaced = new HashSet<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getSkill() {
+        return skill;
+    }
+
+    public boolean isBye() {
+        return bye;
     }
 
     public void addMatch(MatchResult matchResult) {
@@ -31,11 +50,11 @@ public class TeamContext implements Comparable<TeamContext> {
     }
 
     public String toString() {
-        return this.team.getName() + "," + String.format("%.3f", this.team.getSkill()) + "," + this.wins + "," + this.losses
+        return this.getName() + "," + String.format("%.3f", this.getSkill()) + "," + this.wins + "," + this.losses
                 + "," + this.roundsWon + "," + this.roundsLost + "," + this.matchPoints;
     }
 
-    public int compareTo(TeamContext other) {
+    public int compareTo(Team other) {
         if (this.matchPoints < other.matchPoints) {
             return -1;
         } else if (this.matchPoints > other.matchPoints) {
@@ -47,7 +66,7 @@ public class TeamContext implements Comparable<TeamContext> {
             {
                 int max = 0;
                 int min = Integer.MAX_VALUE; // Really Big Number
-                for (TeamContext team: this.teamsFaced) {
+                for (Team team: this.teamsFaced) {
                     thisMB += team.matchPoints;
                     max = Math.max(max, team.matchPoints);
                     min = Math.min(min, team.matchPoints);
@@ -57,7 +76,7 @@ public class TeamContext implements Comparable<TeamContext> {
             {
                 int max = 0;
                 int min = Integer.MAX_VALUE; // Really Big Number
-                for (TeamContext team: other.teamsFaced) {
+                for (Team team: other.teamsFaced) {
                     otherMB += team.matchPoints;
                     max = Math.max(max, team.matchPoints);
                     min = Math.min(min, team.matchPoints);
@@ -69,7 +88,7 @@ public class TeamContext implements Comparable<TeamContext> {
     }
 
     public Team getTeam() {
-        return team;
+        return this;
     }
 
     public int getWins() {
@@ -92,61 +111,28 @@ public class TeamContext implements Comparable<TeamContext> {
         return matchPoints;
     }
 
-    public ArrayList<TeamContext> getTeamsFaced() {
+    public HashSet<Team> getTeamsFaced() {
         return teamsFaced;
     }
 
     public ArrayList<String> getTeamsFacedNames() {
         ArrayList<String> list = new ArrayList<>();
-        for (TeamContext team: this.teamsFaced) {
-            list.add(team.team.getName());
+        for (Team team: this.teamsFaced) {
+            list.add(team.getName());
         }
         return list;
     }
 
-    public void addTeamFaced(TeamContext team) {
+    public void addTeamFaced(Team team) {
         teamsFaced.add(team);
     }
 }
 
-class Team implements Comparable<Team> {
-    private final String name;
-    private final double skill;
-    private final boolean bye;
-
-    public Team(String name, double skill, boolean bye) {
-        this.name = name;
-        this.skill = skill;
-        this.bye = bye;
-    }
-
-    public Team(String name, double skill) {
-        this.name = name;
-        this.skill = skill;
-        this.bye = false;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public double getSkill() {
-        return skill;
-    }
-
-    public boolean isBye() {
-        return bye;
-    }
-
-    @Override
-    public int compareTo(Team other) {
-        return Double.compare(this.skill, other.skill);
-    }
-}
-
 class ByeTeam extends Team {
+    boolean bye;
     public ByeTeam() {
-        super("Bye Week", -99999999, true);
+        super("Bye Week", -99999999);
+        this.bye = true;
     }
 }
 
