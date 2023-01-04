@@ -1,4 +1,4 @@
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+package com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament;
 
 import java.util.Random;
 
@@ -18,11 +18,9 @@ public class Match {
      * <p>
      * We run the match until we have a winner, i.e. at least one team has won 4 rounds on koth or 2 on stopwatch.
      */
-    public Match(double homeSkill, double awaySkill, boolean koth, Long seed) {
+    public Match(double homeSkill, double awaySkill, boolean koth, Random random) {
         double diff = homeSkill - awaySkill;
         double homeWinChance = 1 / (1 + Math.exp(-1 * ODDS_SCALING_FACTOR * diff));
-
-        Random random = seed == -1L ? new Random() : new Random(seed);
 
         // Run first to 4 on koth or 2 on stopwatch
         int winLimit = koth ? 4 : 2;
@@ -54,6 +52,18 @@ public class Match {
 
         homeMatchResult = new MatchResult(winner, homeRoundsWon, awayRoundsWon, homeMatchPoints, homeInqMatchPoints);
         awayMatchResult = new MatchResult(!winner, awayRoundsWon, homeRoundsWon, awayMatchPoints, awayInqMatchPoints);
+    }
+
+    public Match(boolean homeIsBye) {
+        MatchResult byeResult = new MatchResult(false, 0, 4, 0, 0);
+        MatchResult nonByeResult = new MatchResult(true, 4, 0, 9, 9);
+        if (homeIsBye) {
+            this.homeMatchResult = byeResult;
+            this.awayMatchResult = nonByeResult;
+        } else {
+            this.homeMatchResult = nonByeResult;
+            this.awayMatchResult = byeResult;
+        }
     }
 
     public MatchResult getHomeResult() {

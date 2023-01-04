@@ -1,4 +1,4 @@
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+package com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +29,12 @@ public class Team implements Comparable<Team> {
         this.teamsFaced = new HashSet<>();
     }
 
+    public Team(boolean bye) {
+        this("Bye Week", -999999);
+        if (!bye) throw new UnsupportedOperationException("Cannot use this constructor except for bye!");
+        this.bye = true;
+    }
+
     public String getName() {
         return name;
     }
@@ -55,6 +61,8 @@ public class Team implements Comparable<Team> {
     }
 
     public int compareTo(Team other) {
+        if (this.bye) return -1;
+        else if (other.bye) return 1;
         if (this.matchPoints < other.matchPoints) {
             return -1;
         } else if (this.matchPoints > other.matchPoints) {
@@ -66,7 +74,7 @@ public class Team implements Comparable<Team> {
             {
                 int max = 0;
                 int min = Integer.MAX_VALUE; // Really Big Number
-                for (Team team: this.teamsFaced) {
+                for (Team team : this.teamsFaced) {
                     thisMB += team.matchPoints;
                     max = Math.max(max, team.matchPoints);
                     min = Math.min(min, team.matchPoints);
@@ -76,7 +84,7 @@ public class Team implements Comparable<Team> {
             {
                 int max = 0;
                 int min = Integer.MAX_VALUE; // Really Big Number
-                for (Team team: other.teamsFaced) {
+                for (Team team : other.teamsFaced) {
                     otherMB += team.matchPoints;
                     max = Math.max(max, team.matchPoints);
                     min = Math.min(min, team.matchPoints);
@@ -117,7 +125,7 @@ public class Team implements Comparable<Team> {
 
     public ArrayList<String> getTeamsFacedNames() {
         ArrayList<String> list = new ArrayList<>();
-        for (Team team: this.teamsFaced) {
+        for (Team team : this.teamsFaced) {
             list.add(team.getName());
         }
         return list;
@@ -127,12 +135,3 @@ public class Team implements Comparable<Team> {
         teamsFaced.add(team);
     }
 }
-
-class ByeTeam extends Team {
-    boolean bye;
-    public ByeTeam() {
-        super("Bye Week", -99999999);
-        this.bye = true;
-    }
-}
-

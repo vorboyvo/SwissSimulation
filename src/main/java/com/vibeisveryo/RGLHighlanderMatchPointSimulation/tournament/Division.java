@@ -1,9 +1,9 @@
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+package com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament;
 
 import java.util.*;
 
 public class Division {
-    enum VerbosityLevel {
+    public enum VerbosityLevel {
         NONE(0),
         MINIMAL(1),
         DETAILED(2),
@@ -14,7 +14,7 @@ public class Division {
         }
     }
 
-    enum SkillStyle {
+    public enum SkillStyle {
         IDENTICAL,
         UNIFORM,
         RANDOM_NORMAL,
@@ -23,68 +23,48 @@ public class Division {
 
     private final String name;
     private final List<Team> teamList; // Should always be sorted by any action modifying the team list!
-    private final VerbosityLevel verbosityLevel;
-    private final long seed;
+    private final VerbosityLevel verbosityLevel; // TODO add functionality
+    private final Random random;
 
-    /**
-     * This constructor is used for divs that are already final, not simulated, e.g. existing divs.
-     *
-     * @param name The name of the division
-     * @param noOfTeams number of teams to create
-     * @param skillStyle way skill should be distributed - 0 for all teams have same skill, 1 for evenly distributed
-     *                   from -3 to 3, 2 for normally distributed
-     * @param seed Seed to use for RNG if deterministic results desired; use -1L if we want random
-     */
+    public Division(String name, int noOfTeams, SkillStyle skillStyle) {
+        this.name = name;
+        this.teamList = new ArrayList<>();
+        this.verbosityLevel = VerbosityLevel.NONE;
+        this.random = new Random();
+        this.addTeams(noOfTeams, skillStyle);
+    }
+
     public Division(String name, int noOfTeams, SkillStyle skillStyle, Long seed) {
         this.name = name;
         this.teamList = new ArrayList<>();
         this.verbosityLevel = VerbosityLevel.NONE;
-        this.seed = seed;
+        this.random = new Random(seed);
+        this.addTeams(noOfTeams, skillStyle);
+    }
 
-        // Creates teams according to skill style
-        Random generator = (seed == -1) ? new Random() : new Random(seed);
-        if (skillStyle == SkillStyle.IDENTICAL) {
-            for (int i = 0; i < noOfTeams; i++) {
-                this.teamList.add(new Team("Team " + i, 0));
-            }
-            // Skill style 1: teams equally spaced out
-        } else if (skillStyle == SkillStyle.UNIFORM) {
-            for (int i = 0; i < noOfTeams; i++) {
-                double skill = ((double) i / (noOfTeams - 1)) * 6 - 3;
-                this.teamList.add(new Team("Team " + i, skill));
-            }
-            // Skill style 2: Skills generated according to normal distribution
-        } else if (skillStyle == SkillStyle.RANDOM_NORMAL) {
-            for (int i = 0; i < noOfTeams; i++) {
-                double skill = generator.nextGaussian();
-                this.teamList.add(new Team("Team " + i, skill));
-            }
-        } else if (skillStyle == SkillStyle.TRUE_RANDOM) {
-            for (int i = 0; i < noOfTeams; i++) {
-                double skill = generator.nextDouble(-3, 3);
-                this.teamList.add(new Team("Team " + i, skill));
-            }
-        } else {
-            throw new IllegalArgumentException("Skill style invalid: " + skillStyle);
-        }
-
-        Collections.shuffle(this.teamList, generator);
-
-        // Add bye week for odd number of teams
-        if (this.teamList.size() % 2 == 1) {
-            this.teamList.add(new ByeTeam());
-        }
+    public Division(String name, List<Team> teamList) {
+        this.name = name;
+        this.teamList = teamList;
+        this.verbosityLevel = VerbosityLevel.NONE;
+        this.random = new Random();
     }
 
     public Division(String name, List<Team> teamList, Long seed) {
         this.name = name;
         this.teamList = teamList;
         this.verbosityLevel = VerbosityLevel.NONE;
-        this.seed = seed;
+        this.random = new Random(seed);
     }
 
-    Match runMatch(Team homeTeam, Team awayTeam, boolean koth) {
-        Match myMatch = new Match(homeTeam.getTeam().getSkill(), awayTeam.getTeam().getSkill(), koth, seed);
+    private Match runMatch(Team homeTeam, Team awayTeam, boolean koth) {
+        Match myMatch;
+        if (!homeTeam.isBye() && !awayTeam.isBye()) {
+            myMatch = new Match(homeTeam.getTeam().getSkill(), awayTeam.getTeam().getSkill(), koth, this.random);
+        } else if (homeTeam.isBye()) {
+            myMatch = new Match(true);
+        } else {
+            myMatch = new Match(false);
+        }
         homeTeam.addMatch(myMatch.getHomeResult());
         awayTeam.addMatch(myMatch.getAwayResult());
         homeTeam.getTeamsFaced().add(awayTeam);
@@ -92,7 +72,7 @@ public class Division {
         return myMatch;
     }
 
-    Division addPreviousPair(Team... args) {
+    public Division addPreviousPair(Team... args) {
         if (args.length != 2) throw new IllegalArgumentException("Must have two arguments!");
         args[0].getTeamsFaced().add(args[1]);
         args[1].getTeamsFaced().add(args[0]);
@@ -146,46 +126,59 @@ public class Division {
     }
 
     /**
-     * Runs matches for a swiss season.
-     * Returns skill diffs WITHIN A SINGLE SEASON if needed; wrapped and overloaded by method that takes just one int
-     * argument.
-     * @param matchCount Number of matches to be played
-     * @param getSkill true if we want skill, false if we don't care
-     * @return int[matchCount][# of matches in a week] with skill diffs, but null if not getSkill
+     *
      */
-    public double[][] swissRunMatches(int matchCount, boolean getSkill) {
-        // If we don't care about skill diffs, just run matches and return null
-        double[][] skillDiffs;
-        if (getSkill) skillDiffs = new double[matchCount][this.teamList.size()/2];
-        else skillDiffs = null;
-
+    public List<Team[][]> randomRunMatches(int matchCount) {
+        // Make list of matches
+        List<Team[][]> matches = new ArrayList<>();
         // Play the week's matches and make necessary adjustments for each week
         for (int weekNo = 0; weekNo < matchCount; weekNo++) {
-            // Schedule matches
-            List<Team[]> schedule = this.scheduleWeek();
 
-            // Run matches and get skill diffs
-            int i = 0;
+            // Randomize list order
+            Team byeTeam = this.teamList.remove(this.teamList.size()-1);
+            boolean byeRemoved = byeTeam.isBye();
+            if (!byeRemoved) this.teamList.add(byeTeam);
+            Collections.shuffle(this.teamList, this.random);
+            if (byeRemoved) this.teamList.add(byeTeam);
+
+            // Schedule matches by Swiss
+            List<Team[]> schedule = this.scheduleWeek();
+            matches.add(schedule.toArray(new Team[0][]));
+
+            // Run matches
             for (Team[] pairing: schedule) {
-                if (getSkill) skillDiffs[weekNo][i] = Math.abs(
-                        pairing[0].getTeam().getSkill() - pairing[1].getTeam().getSkill()
-                );
                 this.runMatch(pairing[0], pairing[1], weekNo % 2 != 0);
             }
 
             // Sort team list
             this.teamList.sort(Collections.reverseOrder());
         }
-        return skillDiffs;
+        return matches;
     }
 
     /**
      * Runs matches for a Swiss season.
-     * Overloaded by swissRunMatches(int, boolean) - use that with true to get skill diffs.
+     * To get skill diffs, don't use this - just use scheduleWeek and get the skill diffs from the returned schedule.
      * @param matchCount Number of matches to be played
      */
-    public void swissRunMatches(int matchCount) {
-        swissRunMatches(matchCount, false);
+    public List<Team[][]> swissRunMatches(int matchCount) {
+        // Make list of matches
+        List<Team[][]> matches = new ArrayList<>();
+        // Play the week's matches and make necessary adjustments for each week
+        for (int weekNo = 0; weekNo < matchCount; weekNo++) {
+            // Schedule matches
+            List<Team[]> schedule = this.scheduleWeek();
+            matches.add(schedule.toArray(new Team[0][]));
+
+            // Run matches
+            for (Team[] pairing: schedule) {
+                this.runMatch(pairing[0], pairing[1], weekNo % 2 != 0);
+            }
+
+            // Sort team list
+            this.teamList.sort(Collections.reverseOrder());
+        }
+        return matches;
     }
 
     /**
@@ -193,14 +186,14 @@ public class Division {
      *
      * @return List of pairs of TeamContext for that week's matches, where the pair's index 0 is home and 1 is away.
      */
-    List<Team[]> scheduleWeek() {
+    public List<Team[]> scheduleWeek() {
         // Assume team list is sorted. Otherwise, we have other issues going on.
-        Team[] scheduleUnpacked = dfsFindSchedule(new Team[0], this.teamList.toArray(new Team[0]),
+        Deque<Team> scheduleUnpacked = dfsFindSchedule(new LinkedList<>(), this.teamList.toArray(new Team[0]),
                 true, 0, null);
         if (scheduleUnpacked == null) throw new NullPointerException("Could not find a valid set of matches!");
         // Pack schedule into list of pairs
-        List<Team[]> schedule = new ArrayList<>(scheduleUnpacked.length/2);
-        Iterator<Team> packer = Arrays.stream(scheduleUnpacked).iterator();
+        List<Team[]> schedule = new ArrayList<>(scheduleUnpacked.size()/2);
+        Iterator<Team> packer = scheduleUnpacked.iterator();
         while (packer.hasNext()) {
             Team[] pairing = {packer.next(), packer.next()};
             schedule.add(pairing);
@@ -217,7 +210,7 @@ public class Division {
      * @param scheduleFirst Which team to attempt scheduling first
      * @return Full schedule, or null if none was found down this path
      */
-    Team[] dfsFindSchedule(Team[] schedule, Team[] remainingTeams, boolean home,
+    Deque<Team> dfsFindSchedule(Deque<Team> schedule, Team[] remainingTeams, boolean home,
                            int depth, Team scheduleFirst
     ) {
 
@@ -227,17 +220,13 @@ public class Division {
         if (remainingTeams.length == 1) {
             if (home) throw new RuntimeException("Odd number of teams!");
             // Append scheduled team to schedule and return
-            Team[] newSchedule = new Team[schedule.length+1];
-            newSchedule[schedule.length] = scheduleFirst;
-            System.arraycopy(schedule, 0, newSchedule, 0, schedule.length);
-            return newSchedule;
+            schedule.add(scheduleFirst);
+            return schedule;
         }
         // Recursive case 1: On away -> Add current Away team to schedule, recur on rest
         if (!home) {
             // Append scheduled team to schedule
-            Team[] newSchedule = new Team[schedule.length + 1];
-            newSchedule[schedule.length] = scheduleFirst;
-            System.arraycopy(schedule, 0, newSchedule, 0, schedule.length);
+            schedule.add(scheduleFirst);
             // Recur on remainingTeams without scheduled team
             Team[] newRemainingTeams = new Team[remainingTeams.length-1];
             int j = 0;
@@ -248,26 +237,29 @@ public class Division {
                     j++;
                 }
             }
-            return this.dfsFindSchedule(newSchedule, newRemainingTeams, true, depth + 1, null);
+            return this.dfsFindSchedule(schedule, newRemainingTeams, true, depth + 1, null);
         }
         // Recursive case 2: On home -> Look for an opponent to match home with by recurring, go down list of teams if
         // none found
         else {
-            Team[] newSchedule = new Team[schedule.length + 1];
             // Append home team to schedule
-            newSchedule[schedule.length] = scheduleFirst;
-            System.arraycopy(schedule, 0, newSchedule, 0, schedule.length);
+            Team lastScheduled = schedule.peekLast();
+            schedule.add(scheduleFirst);
             Team[] newRemainingTeams = Arrays.copyOfRange(remainingTeams,1,remainingTeams.length);
             Team homeTeam = remainingTeams[0];
             for (Team team : newRemainingTeams) {
                 if (homeTeam.getTeamsFaced().contains(team)) continue;
                 // Recur on newRemainingTeams
-                Team[] path = this.dfsFindSchedule(newSchedule, newRemainingTeams, false, depth + 1, team);
+                Deque<Team> path = this.dfsFindSchedule(schedule, newRemainingTeams, false, depth + 1, team);
                 if (path!=null) return path;
             }
+            Team removed;
+            do {
+                removed = schedule.removeLast();
+            } while (removed != lastScheduled);
+            // No path found
+            return null;
         }
-        // No path found
-        return null;
     }
 
     /**
@@ -290,5 +282,40 @@ public class Division {
 
     public List<Team> getTeamList() {
         return teamList;
+    }
+
+    private void addTeams(int noOfTeams, SkillStyle skillStyle) {
+        if (skillStyle == SkillStyle.IDENTICAL) {
+            for (int i = 0; i < noOfTeams; i++) {
+                this.teamList.add(new Team("Team " + i, 0));
+            }
+            // Skill style 1: teams equally spaced out
+        } else if (skillStyle == SkillStyle.UNIFORM) {
+            for (int i = 0; i < noOfTeams; i++) {
+                double skill = ((double) i / (noOfTeams - 1)) * 6 - 3;
+                this.teamList.add(new Team("Team " + i, skill));
+            }
+            // Skill style 2: Skills generated according to normal distribution
+        } else if (skillStyle == SkillStyle.RANDOM_NORMAL) {
+            for (int i = 0; i < noOfTeams; i++) {
+                double skill = this.random.nextGaussian();
+                this.teamList.add(new Team("Team " + i, skill));
+            }
+        } else if (skillStyle == SkillStyle.TRUE_RANDOM) {
+            for (int i = 0; i < noOfTeams; i++) {
+                double skill = this.random.nextDouble(-3, 3);
+                this.teamList.add(new Team("Team " + i, skill));
+            }
+        } else {
+            throw new IllegalArgumentException("Skill style invalid: " + skillStyle);
+        }
+
+        Collections.shuffle(this.teamList, this.random);
+
+        // Add bye week for odd number of teams, after shuffling so it's at the end
+        // (It doesn't really make a huge difference but it's the principle of it)
+        if (this.teamList.size() % 2 == 1) {
+            this.teamList.add(new Team(true));
+        }
     }
 }

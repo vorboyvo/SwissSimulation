@@ -1,7 +1,8 @@
 package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
 
-import java.time.Duration;
-import java.time.Instant;
+import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Division;
+import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Team;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,7 +51,9 @@ public class Test {
         teamList.add(new Team("Team N", -2.200));
         teamList.add(new Team("Team O", -3.000));
         teamList.add(new Team("Team P", -2.600));
-        Division main = new Division("Main", teamList, -1L);
+        Division main = new Division("Main", teamList);
+        // We don't set a seed since no randomness should be involved here.
+        // If the results are not deterministic, we have a problem regardless of potential randomness.
 
         // Add matches
         main.addPreviousPair(teamList.get(0), teamList.get(1)).addPreviousPair(teamList.get(0), teamList.get(4)).addPreviousPair(teamList.get(0), teamList.get(5)).addPreviousPair(teamList.get(0), teamList.get(9)).addPreviousPair(teamList.get(1), teamList.get(2)).addPreviousPair(teamList.get(1), teamList.get(3)).addPreviousPair(teamList.get(1), teamList.get(7)).addPreviousPair(teamList.get(2), teamList.get(7)).addPreviousPair(teamList.get(2), teamList.get(13)).addPreviousPair(teamList.get(2), teamList.get(14)).addPreviousPair(teamList.get(3), teamList.get(8)).addPreviousPair(teamList.get(3), teamList.get(9)).addPreviousPair(teamList.get(3), teamList.get(10)).addPreviousPair(teamList.get(4), teamList.get(5)).addPreviousPair(teamList.get(4), teamList.get(12)).addPreviousPair(teamList.get(4), teamList.get(15)).addPreviousPair(teamList.get(5), teamList.get(6)).addPreviousPair(teamList.get(5), teamList.get(12)).addPreviousPair(teamList.get(6), teamList.get(9)).addPreviousPair(teamList.get(6), teamList.get(12)).addPreviousPair(teamList.get(6), teamList.get(15)).addPreviousPair(teamList.get(7), teamList.get(8)).addPreviousPair(teamList.get(7), teamList.get(13)).addPreviousPair(teamList.get(8), teamList.get(13)).addPreviousPair(teamList.get(8), teamList.get(14)).addPreviousPair(teamList.get(9), teamList.get(11)).addPreviousPair(teamList.get(10), teamList.get(11)).addPreviousPair(teamList.get(10), teamList.get(12)).addPreviousPair(teamList.get(10), teamList.get(15)).addPreviousPair(teamList.get(11), teamList.get(13)).addPreviousPair(teamList.get(11), teamList.get(14)).addPreviousPair(teamList.get(14), teamList.get(15));
