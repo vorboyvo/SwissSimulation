@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022, 2023 vorboyvo
+ *
+ * This file is part of TournamentSimulation.
+ *
+ * TournamentSimulation is free software: you can redistribute it and/or modify it under the terms of the GNU General
+ * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ *
+ * TournamentSimulation is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
+ * <https://www.gnu.org/licenses/>.
+ */
 package com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament;
 
 import java.util.*;
@@ -158,7 +174,6 @@ public class Division {
 
     /**
      * Runs matches for a Swiss season.
-     * To get skill diffs, don't use this - just use scheduleWeek and get the skill diffs from the returned schedule.
      * @param matchCount Number of matches to be played
      */
     public List<Team[][]> swissRunMatches(int matchCount) {
