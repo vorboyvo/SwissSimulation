@@ -15,13 +15,13 @@
  * <https://www.gnu.org/licenses/>.
  */
 
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+package com.vibeisveryo.tournamentsim;
 
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.benchmarking.Benchmark;
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Division;
+import com.vibeisveryo.tournamentsim.benchmarking.Benchmark;
+import com.vibeisveryo.tournamentsim.tournament.Division;
 
-import static com.vibeisveryo.RGLHighlanderMatchPointSimulation.measurement.MeasureSwiss.measureCombinedDistortions;
-import static com.vibeisveryo.RGLHighlanderMatchPointSimulation.measurement.MeasureSwiss.measureDistortionsOverMatches;
+import static com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureCombinedDistortions;
+import static com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureDistortionsOverMatches;
 
 public class Main {
     public static final Division.SkillStyle SKILL_STYLE = Division.SkillStyle.UNIFORM;

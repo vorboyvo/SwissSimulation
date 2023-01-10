@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation.measurement;
+package com.vibeisveryo.tournamentsim.measurement;
 
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Division;
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.util.OutWriter;
+import com.vibeisveryo.tournamentsim.tournament.Division;
+import com.vibeisveryo.tournamentsim.util.OutWriter;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -25,8 +25,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.vibeisveryo.RGLHighlanderMatchPointSimulation.measurement.Distortions.getDistortions;
-import static com.vibeisveryo.RGLHighlanderMatchPointSimulation.measurement.Distortions.sumDistortionsPerTeam;
+import static com.vibeisveryo.tournamentsim.measurement.Distortions.getDistortions;
+import static com.vibeisveryo.tournamentsim.measurement.Distortions.sumDistortionsPerTeam;
 
 public class MeasureRandomThenSwiss {
     @SuppressWarnings("unused")

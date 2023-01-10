@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation.benchmarking;
+package com.vibeisveryo.tournamentsim.benchmarking;
 
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.Main;
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Division;
+import com.vibeisveryo.tournamentsim.Main;
+import com.vibeisveryo.tournamentsim.tournament.Division;
 
 import java.time.Duration;
 import java.time.Instant;

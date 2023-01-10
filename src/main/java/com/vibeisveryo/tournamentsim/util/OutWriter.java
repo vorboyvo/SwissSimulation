@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation.util;
+package com.vibeisveryo.tournamentsim.util;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;

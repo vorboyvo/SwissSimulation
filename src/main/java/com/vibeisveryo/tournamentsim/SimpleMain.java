@@ -14,10 +14,9 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+package com.vibeisveryo.tournamentsim;
 
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.measurement.MeasureRandom;
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.measurement.MeasureSwiss;
+import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss;
 
 import java.io.IOException;
 

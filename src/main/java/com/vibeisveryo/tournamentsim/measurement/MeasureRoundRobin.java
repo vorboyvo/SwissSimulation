@@ -1,8 +1,8 @@
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation.measurement;
+package com.vibeisveryo.tournamentsim.measurement;
 
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Division;
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Team;
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.util.OutWriter;
+import com.vibeisveryo.tournamentsim.tournament.Division;
+import com.vibeisveryo.tournamentsim.tournament.Team;
+import com.vibeisveryo.tournamentsim.util.OutWriter;
 
 import java.io.IOException;
 import java.time.Duration;

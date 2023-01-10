@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.RGLHighlanderMatchPointSimulation;
+package com.vibeisveryo.tournamentsim;
 
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Division;
-import com.vibeisveryo.RGLHighlanderMatchPointSimulation.tournament.Team;
+import com.vibeisveryo.tournamentsim.tournament.Division;
+import com.vibeisveryo.tournamentsim.tournament.Team;
 
 import java.util.ArrayList;
 import java.util.Arrays;
