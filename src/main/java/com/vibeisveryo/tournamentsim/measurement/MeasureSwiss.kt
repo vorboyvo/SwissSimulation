@@ -14,168 +14,169 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.tournamentsim.measurement;
+package com.vibeisveryo.tournamentsim.measurement
 
-import com.vibeisveryo.tournamentsim.tournament.Division;
-import com.vibeisveryo.tournamentsim.tournament.Team;
-import com.vibeisveryo.tournamentsim.util.OutWriter;
+import com.vibeisveryo.tournamentsim.tournament.Division
+import com.vibeisveryo.tournamentsim.tournament.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.util.OutWriter
+import java.io.IOException
+import java.time.Duration
+import java.time.Instant
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.pow
 
-import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static com.vibeisveryo.tournamentsim.measurement.Distortions.*;
-
-public class MeasureSwiss {
-
-    @SuppressWarnings("unused")
-    public static void measureDistortionsOverMatches(int matchStart, int matchStop, int teamCount, int iterations,
-                                                     Division.SkillStyle skillStyle) throws IOException {
-        OutWriter outWriter = new OutWriter("distortions_matches", "matches", "distortions");
+object MeasureSwiss {
+    @JvmStatic
+    @Throws(IOException::class)
+    fun measureDistortionsOverMatches(
+        matchStart: Int, matchStop: Int, teamCount: Int, iterations: Int,
+        skillStyle: SkillStyle?
+    ) {
+        val outWriter = OutWriter("distortions_matches", "matches", "distortions")
 
         // Do the iters
-        for (int i = 0; i < iterations; i++) {
-            for (int matchCount = matchStart; matchCount < matchStop; matchCount++) {
-                Division main = new Division("Main", teamCount, skillStyle);
-                main.swissRunMatches(matchCount);
-                List<Integer> distortions = getDistortions(main);
+        for (i in 0 until iterations) {
+            for (matchCount in matchStart until matchStop) {
+                val main = Division("Main", teamCount, skillStyle!!)
+                main.swissRunMatches(matchCount)
+                val distortions = Distortions.getDistortions(main)
                 outWriter.print(
-                        matchCount,
-                        String.format("%3.5f", sumDistortionsPerTeam(distortions))
-                );
+                    matchCount, String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                )
             }
         }
         // Close writer
-        outWriter.close();
+        outWriter.close()
     }
 
-    @SuppressWarnings("unused")
-    public static void measureCombinedDistortions(int matchesStart, int teamsStart, int teamsStop,
-                                                  int iterations, Division.SkillStyle skillStyle) throws IOException {
-        OutWriter outWriter = new OutWriter("distortions_combined", "matches","teams","distortions");
+    @JvmStatic
+    @Throws(IOException::class)
+    fun measureCombinedDistortions(
+        matchesStart: Int, teamsStart: Int, teamsStop: Int,
+        iterations: Int, skillStyle: SkillStyle?
+    ) {
+        val outWriter = OutWriter("distortions_combined", "matches", "teams", "distortions")
 
         // Do the iters
-        for (int i = 0; i < iterations; i++) {
-            Instant startTime = Instant.now();
-            for (int teamCount = teamsStart; teamCount < teamsStop; teamCount++) {
-                for (int matchCount = matchesStart; matchCount < Math.ceil(teamCount / 2.0) * 2 - 2; matchCount++) {
-                    Division main = new Division("Main", teamCount, skillStyle);
-                    main.swissRunMatches(matchCount);
-                    List<Integer> distortions = getDistortions(main);
-                    outWriter.addRecord(matchCount, teamCount,
-                            String.format("%3.5f", sumDistortionsPerTeam(distortions)));
+        for (i in 0 until iterations) {
+            val startTime = Instant.now()
+            for (teamCount in teamsStart until teamsStop) {
+                var matchCount = matchesStart
+                while (matchCount < ceil(teamCount / 2.0) * 2 - 2) {
+                    val main = Division("Main", teamCount, skillStyle!!)
+                    main.swissRunMatches(matchCount)
+                    val distortions = Distortions.getDistortions(main)
+                    outWriter.addRecord(
+                        matchCount,
+                        teamCount,
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                    )
+                    matchCount++
                 }
             }
-            outWriter.print();
-            Instant endTime = Instant.now();
-            long time = Duration.between(startTime, endTime).toNanos();
-            if (i % Math.pow(10.0, Math.floor(Math.log10(iterations-1))) == 0
-                    || time > TimeUnit.SECONDS.toNanos(1L))
-                System.out.printf("Iteration %d took %4.5f seconds\n", i, time/1000000000.0);
+            outWriter.print()
+            val endTime = Instant.now()
+            val time = Duration.between(startTime, endTime).toNanos()
+            if (i % 10.0.pow(floor(log10((iterations - 1).toDouble()))) == 0.0
+                || time > TimeUnit.SECONDS.toNanos(1L)
+            ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
         }
 
         // Output CSV
-        outWriter.close();
+        outWriter.close()
     }
 
-    @SuppressWarnings("unused")
-    public static void measureCombinedFractionalDistortions(int matchesStart, int matchesStop,int teamsStart,
-                                                         int teamsStop, int iterations,
-                                                         Division.SkillStyle skillStyle) throws IOException {
-        OutWriter outWriter = new OutWriter("distortions_combined", "matches", "teams",
-                "distortionstophalf", "distortionstoptwothirds", "distortions");
+    @Throws(IOException::class)
+    fun measureCombinedFractionalDistortions(
+        matchesStart: Int, matchesStop: Int, teamsStart: Int,
+        teamsStop: Int, iterations: Int,
+        skillStyle: SkillStyle?
+    ) {
+        val outWriter = OutWriter(
+            "distortions_combined", "matches", "teams",
+            "distortionstophalf", "distortionstoptwothirds", "distortions"
+        )
 
         // Do the iters
-        for (int i = 0; i < iterations; i++) {
-            Instant startTime = Instant.now();
-            for (int teamCount = teamsStart; teamCount < teamsStop; teamCount++) {
-                for (int matchCount = matchesStart; matchCount < (matchesStop < 0 ? Math.ceil(teamCount / 2.0) * 2 - 2 : matchesStop); matchCount++) {
-                    Division main = new Division("Main", teamCount, skillStyle);
-                    main.swissRunMatches(matchCount);
-                    List<Integer> distortions = getDistortions(main);
-                    outWriter.addRecord(matchCount, teamCount,
-                            String.format("%3.5f", sumFractionalDistortions(distortions, 1/2.0)),
-                            String.format("%3.5f", sumFractionalDistortions(distortions, 1/3.0)),
-                            String.format("%3.5f", sumDistortionsPerTeam(distortions)));
+        for (i in 0 until iterations) {
+            val startTime = Instant.now()
+            for (teamCount in teamsStart until teamsStop) {
+                var matchCount = matchesStart
+                while (matchCount < (if (matchesStop < 0) (ceil(teamCount / 2.0) * 2 - 2).toInt() else matchesStop)) {
+                    val main = Division("Main", teamCount, skillStyle!!)
+                    main.swissRunMatches(matchCount)
+                    val distortions = Distortions.getDistortions(main)
+                    outWriter.addRecord(
+                        matchCount,
+                        teamCount,
+                        String.format("%3.5f", Distortions.sumFractionalDistortions(distortions, 1 / 2.0)),
+                        String.format("%3.5f", Distortions.sumFractionalDistortions(distortions, 1 / 3.0)),
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                    )
+                    matchCount++
                 }
             }
-            outWriter.print();
-            Instant endTime = Instant.now();
-            long time = Duration.between(startTime, endTime).toNanos();
-            if (i % Math.pow(10.0, Math.floor(Math.log10(iterations-1))) == 0
-                    || time > TimeUnit.SECONDS.toNanos(1L))
-                System.out.printf("Iteration %d took %4.5f seconds\n", i, time/1000000000.0);
+            outWriter.print()
+            val endTime = Instant.now()
+            val time = Duration.between(startTime, endTime).toNanos()
+            if (i % 10.0.pow(floor(log10((iterations - 1).toDouble()))) == 0.0
+                || time > TimeUnit.SECONDS.toNanos(1L)
+            ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
         }
 
         // Output CSV
-        outWriter.close();
+        outWriter.close()
     }
 
-    public static void getDistortionsSource(int iterations) throws IOException {
-        final int teamCount = 16;
-        final int matchCount = 7;
-
-        OutWriter outWriter = new OutWriter("distortions_source", "skillRank","leagueTableRank");
-
-        for (int i = 0; i < iterations; i++) {
-            Instant startTime = Instant.now();
-            Division main = new Division("Main", teamCount, Division.SkillStyle.UNIFORM);
-            main.swissRunMatches(matchCount);
+    @Throws(IOException::class)
+    fun getDistortionsSource(iterations: Int) {
+        val teamCount = 16
+        val matchCount = 7
+        val outWriter = OutWriter("distortions_source", "skillRank", "leagueTableRank")
+        for (i in 0 until iterations) {
+            val startTime = Instant.now()
+            val main = Division("Main", teamCount, SkillStyle.UNIFORM)
+            main.swissRunMatches(matchCount)
             // Get team skill rank
-            List<Integer> teamSkillRanks = main.getTeamList().stream().map(team -> {
-                List<Team> teams = new ArrayList<>(main.getTeamList());
-                teams.sort(Collections.reverseOrder((o1, o2) -> {
-                    double diff = o1.getTeam().getSkill() - o2.getTeam().getSkill();
-                    return (int) ((diff >= 0) ? Math.ceil(diff) : Math.floor(diff));
-                }));
-                return teams.indexOf(team);
-            }).toList();
-            for (int j = 0; j < teamCount; j++) {
-                outWriter.addRecord(teamSkillRanks.get(j), j);
+            val teamSkillRanks = main.teamSkillRanks()
+            for (j in 0 until teamCount) {
+                outWriter.addRecord(teamSkillRanks[j], j)
             }
-            outWriter.print();
-            Instant endTime = Instant.now();
-            long time = Duration.between(startTime, endTime).toNanos();
-            if (i % Math.pow(10.0, Math.floor(Math.log10(iterations-1))) == 0
-                    || time > TimeUnit.SECONDS.toNanos(1L))
-                System.out.printf("Iteration %d took %4.5f seconds\n", i, time/1000000000.0);
+            outWriter.print()
+            val endTime = Instant.now()
+            val time = Duration.between(startTime, endTime).toNanos()
+            if (i % 10.0.pow(floor(log10((iterations - 1).toDouble()))) == 0.0
+                || time > TimeUnit.SECONDS.toNanos(1L)
+            ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
         }
     }
 
-    public static void getStandingsOverASeason(int iterations, int matchCount, int teamCount) throws IOException {
-
-        OutWriter outWriter = new OutWriter(String.format("standings_weeks_%dteams", teamCount), "week","skillRank","leagueTableRank");
-
-        for (int i = 0; i < iterations; i++) {
-            Instant startTime = Instant.now();
-            Division main = new Division("Main", teamCount, Division.SkillStyle.UNIFORM);
-            for (int week = 0; week < matchCount; week++) {
-                main.swissRunMatches(1);
+    @Throws(IOException::class)
+    fun getStandingsOverASeason(iterations: Int, matchCount: Int, teamCount: Int) {
+        val outWriter =
+            OutWriter("standings_weeks_${teamCount}teams", "week", "skillRank", "leagueTableRank")
+        for (i in 0 until iterations) {
+            val startTime = Instant.now()
+            val main = Division("Main", teamCount, SkillStyle.UNIFORM)
+            for (week in 0 until matchCount) {
+                main.swissRunMatches(1)
                 // Get team skill rank
-                List<Integer> teamSkillRanks = main.getTeamList().stream().map(team -> {
-                    List<Team> teams = new ArrayList<>(main.getTeamList());
-                    teams.sort(Collections.reverseOrder((o1, o2) -> {
-                        double diff = o1.getTeam().getSkill() - o2.getTeam().getSkill();
-                        return (int) ((diff >= 0) ? Math.ceil(diff) : Math.floor(diff));
-                    }));
-                    return teams.indexOf(team);
-                }).toList();
-                for (int j = 0; j < teamCount; j++) {
-                    outWriter.addRecord(week, teamSkillRanks.get(j), j);
+                val teamSkillRanks = main.teamSkillRanks()
+                for (j in 0 until teamCount) {
+                    outWriter.addRecord(week, teamSkillRanks[j], j)
                 }
             }
-            outWriter.print();
-            Instant endTime = Instant.now();
-            long time = Duration.between(startTime, endTime).toNanos();
-            if (i % Math.pow(10.0, Math.floor(Math.log10(iterations-1))) == 0
-                    || time > TimeUnit.SECONDS.toNanos(1L))
-                System.out.printf("Iteration %d took %4.5f seconds\n", i, time/1000000000.0);
+            outWriter.print()
+            val endTime = Instant.now()
+            val time = Duration.between(startTime, endTime).toNanos()
+            if (i % 10.0.pow(floor(log10((iterations - 1).toDouble()))) == 0.0
+                || time > TimeUnit.SECONDS.toNanos(1L)
+            ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
         }
-
-        outWriter.close();
+        outWriter.close()
     }
 }

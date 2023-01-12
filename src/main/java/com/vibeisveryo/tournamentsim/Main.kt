@@ -14,72 +14,82 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
+package com.vibeisveryo.tournamentsim
 
-package com.vibeisveryo.tournamentsim;
+import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSeason
+import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSwissMatches
+import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureCombinedDistortions
+import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureDistortionsOverMatches
+import com.vibeisveryo.tournamentsim.tournament.Division.SkillStyle
+import java.util.*
+import kotlin.math.ceil
+import kotlin.system.exitProcess
 
-import com.vibeisveryo.tournamentsim.benchmarking.Benchmark;
-import com.vibeisveryo.tournamentsim.tournament.Division;
-
-import static com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureCombinedDistortions;
-import static com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureDistortionsOverMatches;
-
-public class Main {
-    public static final Division.SkillStyle SKILL_STYLE = Division.SkillStyle.UNIFORM;
-
-    private static void helpCommand() {
-        String usageString = "Usage: java -jar RGLHighlanderMatchPointSimulation.jar [OPTION]... <COMMAND> [<ARGS>]...";
-        String[] helpStrings = {
-                "distMatches: Measure distortions over adding matches; usage: distMatches <matchesStart> <matchesStop> "
-                + "<teamCount> <iterations>",
-                "distCombined: Measure distortions over matches and teams; usage: distCombined <matchesStart> " +
-                        "<teamsStart> <teamsStop> <iterations>",
-                "benchmarkSeason: Benchmarks the performance of a season over many iterations; usage: " +
-                        "benchmarkSeason <iterations> <teams> <matches>",
-                "benchmarkMatches: Benchmarks how long team sizes take in relation to each other; usage: " +
-                        "benchmarkMatches <iterations> <maxTeams>"
-        };
-        System.out.println(usageString);
-        for (String helpString: helpStrings) {
-            System.out.print("   ");
-            System.out.println(helpString);
+object Main {
+    val SKILL_STYLE = SkillStyle.UNIFORM
+    private fun helpCommand() {
+        val usageString = "Usage: java -jar RGLHighlanderMatchPointSimulation.jar [OPTION]... <COMMAND> [<ARGS>]..."
+        val helpStrings = arrayOf(
+            "distMatches: Measure distortions over adding matches; usage: distMatches <matchesStart> <matchesStop> "
+                    + "<teamCount> <iterations>",
+            "distCombined: Measure distortions over matches and teams; usage: distCombined <matchesStart> " +
+                    "<teamsStart> <teamsStop> <iterations>",
+            "benchmarkSeason: Benchmarks the performance of a season over many iterations; usage: " +
+                    "benchmarkSeason <iterations> <teams> <matches>",
+            "benchmarkMatches: Benchmarks how long team sizes take in relation to each other; usage: " +
+                    "benchmarkMatches <iterations> <maxTeams>"
+        )
+        println(usageString)
+        for (helpString in helpStrings) {
+            print("   ")
+            println(helpString)
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    @Throws(Exception::class)
+    @JvmStatic
+    fun main(args: Array<String>) {
         // Handle command line arguments
-        if (args.length == 0) {
-            helpCommand();
-            System.exit(0);
+        if (args.isEmpty()) {
+            helpCommand()
+            exitProcess(0)
         }
-        switch (args[0].toLowerCase()) {
-            case "help" -> helpCommand();
-            case "distmatches" -> {
-                if (args.length == 5)
-                    measureDistortionsOverMatches(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-                            Integer.parseInt(args[3]), Integer.parseInt(args[4]), SKILL_STYLE);
-                else helpCommand();
+        when (args[0].lowercase(Locale.getDefault())) {
+            "help" -> helpCommand()
+            "distmatches" -> {
+                if (args.size == 5) measureDistortionsOverMatches(
+                    args[1].toInt(),
+                    args[2].toInt(),
+                    args[3].toInt(),
+                    args[4].toInt(),
+                    SKILL_STYLE
+                ) else helpCommand()
             }
-            case "distcombined" -> {
-                if (args.length == 5)
-                    measureCombinedDistortions(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-                            Integer.parseInt(args[3]), Integer.parseInt(args[4]), SKILL_STYLE);
-                else helpCommand();
+            "distcombined" -> {
+                if (args.size == 5) measureCombinedDistortions(
+                    args[1].toInt(),
+                    args[2].toInt(),
+                    args[3].toInt(),
+                    args[4].toInt(),
+                    SKILL_STYLE
+                ) else helpCommand()
             }
-            case "benchmarkseason" -> {
-                if (args.length == 4)
-                    Benchmark.benchSeason(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-                            Integer.parseInt(args[3]));
-                else if (args.length == 3)
-                    Benchmark.benchSeason(Integer.parseInt(args[1]), Integer.parseInt(args[2]),
-                            (int) (Math.ceil(Integer.parseInt(args[2]) / 2.0) * 2 - 2));
-                else Benchmark.benchSeason(500, 30, 27);
+            "benchmarkseason" -> {
+                if (args.size == 4) benchSeason(
+                    args[1].toInt(),
+                    args[2].toInt(),
+                    args[3].toInt()
+                ) else if (args.size == 3) benchSeason(
+                    args[1].toInt(), args[2].toInt(), (ceil(args[2].toInt() / 2.0) * 2 - 2).toInt()
+                ) else benchSeason(500, 30, 27)
             }
-            case "benchmarkmatches" -> {
-                if (args.length == 3)
-                    Benchmark.benchSwissMatches(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
-                else if (args.length == 2)
-                    Benchmark.benchSwissMatches(Integer.parseInt(args[1]), 999);
-                else Benchmark.benchSwissMatches(100,34);
+            "benchmarkmatches" -> {
+                if (args.size == 3) benchSwissMatches(
+                    args[1].toInt(),
+                    args[2].toInt()
+                ) else if (args.size == 2) benchSwissMatches(
+                    args[1].toInt(), 999
+                ) else benchSwissMatches(100, 34)
             }
         }
     }

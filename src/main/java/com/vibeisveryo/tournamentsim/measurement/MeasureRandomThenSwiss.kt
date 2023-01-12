@@ -14,51 +14,56 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.tournamentsim.measurement;
+package com.vibeisveryo.tournamentsim.measurement
 
-import com.vibeisveryo.tournamentsim.tournament.Division;
-import com.vibeisveryo.tournamentsim.util.OutWriter;
+import com.vibeisveryo.tournamentsim.tournament.Division
+import com.vibeisveryo.tournamentsim.tournament.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.util.OutWriter
+import java.io.IOException
+import java.time.Duration
+import java.time.Instant
+import java.util.concurrent.TimeUnit
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.log10
 
-import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static com.vibeisveryo.tournamentsim.measurement.Distortions.getDistortions;
-import static com.vibeisveryo.tournamentsim.measurement.Distortions.sumDistortionsPerTeam;
-
-public class MeasureRandomThenSwiss {
-    @SuppressWarnings("unused")
-    public static void measureCombinedDistortions(int matchesStart, int teamsStart, int teamsStop,
-                                                  int iterations, Division.SkillStyle skillStyle, double propRandom)
-            throws IOException {
-        OutWriter outWriter = new OutWriter("distortions_randswiss_combined", "matches","teams","distortions");
+object MeasureRandomThenSwiss {
+    @Throws(IOException::class)
+    fun measureCombinedDistortions(
+        matchesStart: Int, teamsStart: Int, teamsStop: Int,
+        iterations: Int, skillStyle: SkillStyle?, propRandom: Double
+    ) {
+        val outWriter = OutWriter("distortions_randswiss_combined", "matches", "teams", "distortions")
 
         // Do the iters
-        for (int i = 0; i < iterations; i++) {
-            Instant startTime = Instant.now();
-            for (int teamCount = teamsStart; teamCount < teamsStop; teamCount++) {
-                for (int matchCount = matchesStart; matchCount < Math.ceil(teamCount / 2.0) * 2 - 2; matchCount++) {
-                    int randMatchCount = (int) Math.ceil(matchCount * propRandom);
-                    int swissMatchCount = matchCount - randMatchCount;
-                    Division main = new Division("Main", teamCount, skillStyle);
-                    main.randomRunMatches(randMatchCount);
-                    main.swissRunMatches(swissMatchCount);
-                    List<Integer> distortions = getDistortions(main);
-                    outWriter.addRecord(matchCount, teamCount,
-                            String.format("%3.5f", sumDistortionsPerTeam(distortions)));
+        for (i in 0 until iterations) {
+            val startTime = Instant.now()
+            for (teamCount in teamsStart until teamsStop) {
+                var matchCount = matchesStart
+                while (matchCount < ceil(teamCount / 2.0) * 2 - 2) {
+                    val randMatchCount = ceil(matchCount * propRandom).toInt()
+                    val swissMatchCount = matchCount - randMatchCount
+                    val main = Division("Main", teamCount, skillStyle!!)
+                    main.randomRunMatches(randMatchCount)
+                    main.swissRunMatches(swissMatchCount)
+                    val distortions = Distortions.getDistortions(main)
+                    outWriter.addRecord(
+                        matchCount,
+                        teamCount,
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                    )
+                    matchCount++
                 }
             }
-            outWriter.print();
-            Instant endTime = Instant.now();
-            long time = Duration.between(startTime, endTime).toNanos();
-            if (i % Math.pow(10.0, Math.floor(Math.log10(iterations-1))) == 0
-                    || time > TimeUnit.SECONDS.toNanos(1L))
-                System.out.printf("Iteration %d took %4.5f seconds\n", i, time/1000000000.0);
+            outWriter.print()
+            val endTime = Instant.now()
+            val time = Duration.between(startTime, endTime).toNanos()
+            if (i % Math.pow(10.0, floor(log10((iterations - 1).toDouble()))) == 0.0
+                || time > TimeUnit.SECONDS.toNanos(1L)
+            ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
         }
 
         // Output CSV
-        outWriter.close();
+        outWriter.close()
     }
 }

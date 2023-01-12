@@ -14,18 +14,14 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.tournamentsim;
+package com.vibeisveryo.tournamentsim
 
-import com.vibeisveryo.tournamentsim.tournament.Division;
-import com.vibeisveryo.tournamentsim.tournament.Team;
+import com.vibeisveryo.tournamentsim.tournament.Division
+import com.vibeisveryo.tournamentsim.tournament.Team
+import java.util.*
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-public class Test {
-
-    private static void testCase1() {
+object Test {
+    private fun testCase1() {
         /*
          * Division Main with 16 teams
          * Name,Skill,W,L,RW,RL,MP,Teams Faced
@@ -49,37 +45,64 @@ public class Test {
          * Expected output:
          * [[Team A, Team C], [Team B, Team E], [Team D, Team F], [Team G, Team H], [Team I, Team J], [Team K, Team N], [Team L, Team P], [Team M, Team O]]
          */
-        List<Team> teamList = new ArrayList<>();
+        val teamList: MutableList<Team> = ArrayList()
         // Add teams
-        teamList.add(new Team("Team A", 3.000));
-        teamList.add(new Team("Team B", 2.600));
-        teamList.add(new Team("Team C", 1.800));
-        teamList.add(new Team("Team D", 1.000));
-        teamList.add(new Team("Team E", 2.200));
-        teamList.add(new Team("Team F", 1.400));
-        teamList.add(new Team("Team G", -0.200));
-        teamList.add(new Team("Team H", 0.200));
-        teamList.add(new Team("Team I", -0.600));
-        teamList.add(new Team("Team J", 0.600));
-        teamList.add(new Team("Team K", -1.400));
-        teamList.add(new Team("Team L", -1.800));
-        teamList.add(new Team("Team M", -1.000));
-        teamList.add(new Team("Team N", -2.200));
-        teamList.add(new Team("Team O", -3.000));
-        teamList.add(new Team("Team P", -2.600));
-        Division main = new Division("Main", teamList);
+        teamList.add(Team("Team A", 3.000))
+        teamList.add(Team("Team B", 2.600))
+        teamList.add(Team("Team C", 1.800))
+        teamList.add(Team("Team D", 1.000))
+        teamList.add(Team("Team E", 2.200))
+        teamList.add(Team("Team F", 1.400))
+        teamList.add(Team("Team G", -0.200))
+        teamList.add(Team("Team H", 0.200))
+        teamList.add(Team("Team I", -0.600))
+        teamList.add(Team("Team J", 0.600))
+        teamList.add(Team("Team K", -1.400))
+        teamList.add(Team("Team L", -1.800))
+        teamList.add(Team("Team M", -1.000))
+        teamList.add(Team("Team N", -2.200))
+        teamList.add(Team("Team O", -3.000))
+        teamList.add(Team("Team P", -2.600))
+        val main = Division("Main", teamList)
         // We don't set a seed since no randomness should be involved here.
         // If the results are not deterministic, we have a problem regardless of potential randomness.
 
         // Add matches
-        main.addPreviousPair(teamList.get(0), teamList.get(1)).addPreviousPair(teamList.get(0), teamList.get(4)).addPreviousPair(teamList.get(0), teamList.get(5)).addPreviousPair(teamList.get(0), teamList.get(9)).addPreviousPair(teamList.get(1), teamList.get(2)).addPreviousPair(teamList.get(1), teamList.get(3)).addPreviousPair(teamList.get(1), teamList.get(7)).addPreviousPair(teamList.get(2), teamList.get(7)).addPreviousPair(teamList.get(2), teamList.get(13)).addPreviousPair(teamList.get(2), teamList.get(14)).addPreviousPair(teamList.get(3), teamList.get(8)).addPreviousPair(teamList.get(3), teamList.get(9)).addPreviousPair(teamList.get(3), teamList.get(10)).addPreviousPair(teamList.get(4), teamList.get(5)).addPreviousPair(teamList.get(4), teamList.get(12)).addPreviousPair(teamList.get(4), teamList.get(15)).addPreviousPair(teamList.get(5), teamList.get(6)).addPreviousPair(teamList.get(5), teamList.get(12)).addPreviousPair(teamList.get(6), teamList.get(9)).addPreviousPair(teamList.get(6), teamList.get(12)).addPreviousPair(teamList.get(6), teamList.get(15)).addPreviousPair(teamList.get(7), teamList.get(8)).addPreviousPair(teamList.get(7), teamList.get(13)).addPreviousPair(teamList.get(8), teamList.get(13)).addPreviousPair(teamList.get(8), teamList.get(14)).addPreviousPair(teamList.get(9), teamList.get(11)).addPreviousPair(teamList.get(10), teamList.get(11)).addPreviousPair(teamList.get(10), teamList.get(12)).addPreviousPair(teamList.get(10), teamList.get(15)).addPreviousPair(teamList.get(11), teamList.get(13)).addPreviousPair(teamList.get(11), teamList.get(14)).addPreviousPair(teamList.get(14), teamList.get(15));
-
-        System.out.println(main.scheduleWeek().stream()
-                .map(a -> Arrays.deepToString(Arrays.stream(a).map(b -> b.getTeam().getName()).toArray())).toList()
-        );
+        main.addPreviousPair(teamList[0], teamList[1]).addPreviousPair(teamList[0], teamList[4]).addPreviousPair(
+            teamList[0], teamList[5]
+        ).addPreviousPair(teamList[0], teamList[9]).addPreviousPair(teamList[1], teamList[2])
+            .addPreviousPair(teamList[1], teamList[3]).addPreviousPair(
+            teamList[1], teamList[7]
+        ).addPreviousPair(teamList[2], teamList[7]).addPreviousPair(teamList[2], teamList[13])
+            .addPreviousPair(teamList[2], teamList[14]).addPreviousPair(
+            teamList[3], teamList[8]
+        ).addPreviousPair(teamList[3], teamList[9]).addPreviousPair(teamList[3], teamList[10])
+            .addPreviousPair(teamList[4], teamList[5]).addPreviousPair(
+            teamList[4], teamList[12]
+        ).addPreviousPair(teamList[4], teamList[15]).addPreviousPair(teamList[5], teamList[6])
+            .addPreviousPair(teamList[5], teamList[12]).addPreviousPair(
+            teamList[6], teamList[9]
+        ).addPreviousPair(teamList[6], teamList[12]).addPreviousPair(teamList[6], teamList[15])
+            .addPreviousPair(teamList[7], teamList[8]).addPreviousPair(
+            teamList[7], teamList[13]
+        ).addPreviousPair(teamList[8], teamList[13]).addPreviousPair(teamList[8], teamList[14])
+            .addPreviousPair(teamList[9], teamList[11]).addPreviousPair(
+            teamList[10], teamList[11]
+        ).addPreviousPair(teamList[10], teamList[12]).addPreviousPair(teamList[10], teamList[15]).addPreviousPair(
+            teamList[11], teamList[13]
+        ).addPreviousPair(teamList[11], teamList[14]).addPreviousPair(teamList[14], teamList[15])
+        println(
+            main.scheduleWeek().stream()
+                .map { a: Array<Team>? ->
+                    Arrays.deepToString(Arrays.stream(a).map { b: Team -> b.team.name }
+                        .toArray())
+                }.toList()
+        )
     }
 
-    public static void main(String[] args) throws Exception {
-        testCase1();
+    @Throws(Exception::class)
+    @JvmStatic
+    fun main(args: Array<String>) {
+        testCase1()
     }
 }

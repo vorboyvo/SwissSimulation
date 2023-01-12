@@ -14,16 +14,15 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.tournamentsim;
+package com.vibeisveryo.tournamentsim
 
-import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss;
+import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSwissMatches
+import java.io.IOException
 
-import java.io.IOException;
-
-public class SimpleMain {
-    public static void main(String[] args) throws IOException {
-        int i = 14;
-        int matchCount = (int) Math.ceil(i / 2.0)*2 - 3;
-        MeasureSwiss.getStandingsOverASeason(1, matchCount, i);
+object SimpleMain {
+    @Throws(IOException::class)
+    @JvmStatic
+    fun main(args: Array<String>) {
+        benchSwissMatches(100, 34)
     }
 }

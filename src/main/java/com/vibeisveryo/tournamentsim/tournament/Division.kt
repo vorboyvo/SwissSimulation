@@ -17,6 +17,9 @@
 package com.vibeisveryo.tournamentsim.tournament
 
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 class Division {
@@ -30,7 +33,7 @@ class Division {
 
     private val name: String
     private val teamList // Should always be sorted by any action modifying the team list!
-            : MutableList<Team?>
+            : MutableList<Team>
     private val verbosityLevel // TODO add functionality
             : VerbosityLevel
     private val random: Random
@@ -51,22 +54,22 @@ class Division {
         addTeams(noOfTeams, skillStyle)
     }
 
-    constructor(name: String, teamList: MutableList<Team?>) {
+    constructor(name: String, teamList: MutableList<Team>) {
         this.name = name
         this.teamList = teamList
         verbosityLevel = VerbosityLevel.NONE
         random = Random()
     }
 
-    constructor(name: String, teamList: MutableList<Team?>, seed: Long?) {
+    constructor(name: String, teamList: MutableList<Team>, seed: Long?) {
         this.name = name
         this.teamList = teamList
         verbosityLevel = VerbosityLevel.NONE
         random = Random(seed!!)
     }
 
-    private fun runMatch(homeTeam: Team?, awayTeam: Team?, koth: Boolean): Match {
-        val myMatch: Match = if (!homeTeam!!.isBye && !awayTeam!!.isBye) {
+    private fun runMatch(homeTeam: Team, awayTeam: Team, koth: Boolean): Match {
+        val myMatch: Match = if (!homeTeam.isBye && !awayTeam.isBye) {
             Match(
                 homeTeam.team.skill,
                 awayTeam.team.skill,
@@ -79,7 +82,7 @@ class Division {
             Match(false)
         }
         homeTeam.addMatch(myMatch.homeResult)
-        awayTeam!!.addMatch(myMatch.awayResult)
+        awayTeam.addMatch(myMatch.awayResult)
         homeTeam.teamsFaced.add(awayTeam)
         awayTeam.teamsFaced.add(homeTeam)
         return myMatch
@@ -98,17 +101,17 @@ class Division {
      * div size - 1.
      */
     fun rrRunMatches() {
-        val weekList: MutableList<List<Array<Team?>>> = ArrayList()
+        val weekList: MutableList<List<Array<Team>>> = ArrayList()
 
         // Generate matchups
         // Circle method for generating matchups
         // https://en.wikipedia.org/wiki/Round-robin_tournament#Circle_method
         val numberOfTeams = teamList.size
         val fixedTeam = teamList[0]
-        val rotatingTeams: MutableList<Team?> = teamList.subList(1, numberOfTeams)
+        val rotatingTeams: MutableList<Team> = teamList.subList(1, numberOfTeams)
         for (i in 0 until numberOfTeams - 1) {
-            val week: MutableList<Array<Team?>> = ArrayList()
-            val currentTeamList: MutableList<Team?> = ArrayList(rotatingTeams)
+            val week: MutableList<Array<Team>> = ArrayList()
+            val currentTeamList: MutableList<Team> = ArrayList(rotatingTeams)
             currentTeamList.add(0, fixedTeam)
             for (j in 0 until (numberOfTeams / 2.0).roundToInt()) {
                 week.add(
@@ -141,15 +144,15 @@ class Division {
     /**
      *
      */
-    fun randomRunMatches(matchCount: Int): List<Array<Array<Team?>>> {
+    fun randomRunMatches(matchCount: Int): List<Array<Array<Team>>> {
         // Make list of matches
-        val matches: MutableList<Array<Array<Team?>>> = ArrayList()
+        val matches: MutableList<Array<Array<Team>>> = ArrayList()
         // Play the week's matches and make necessary adjustments for each week
         for (weekNo in 0 until matchCount) {
 
             // Randomize list order
             val byeTeam = teamList.removeAt(teamList.size - 1)
-            val byeRemoved = byeTeam!!.isBye
+            val byeRemoved = byeTeam.isBye
             if (!byeRemoved) teamList.add(byeTeam)
             teamList.shuffle(random)
             if (byeRemoved) teamList.add(byeTeam)
@@ -173,9 +176,9 @@ class Division {
      * Runs matches for a Swiss season.
      * @param matchCount Number of matches to be played
      */
-    fun swissRunMatches(matchCount: Int): List<Array<Array<Team?>>> {
+    fun swissRunMatches(matchCount: Int): List<Array<Array<Team>>> {
         // Make list of matches
-        val matches: MutableList<Array<Array<Team?>>> = ArrayList()
+        val matches: MutableList<Array<Array<Team>>> = ArrayList()
         // Play the week's matches and make necessary adjustments for each week
         for (weekNo in 0 until matchCount) {
             // Schedule matches
@@ -198,15 +201,15 @@ class Division {
      *
      * @return List of pairs of TeamContext for that week's matches, where the pair's index 0 is home and 1 is away.
      */
-    fun scheduleWeek(): List<Array<Team?>> {
+    fun scheduleWeek(): List<Array<Team>> {
         // Assume team list is sorted. Otherwise, we have other issues going on.
         val scheduleUnpacked = dfsFindSchedule(
             LinkedList(), teamList.toTypedArray(),
             true, 0, null
         ) ?: throw NullPointerException("Could not find a valid set of matches!")
         // Pack schedule into list of pairs
-        val schedule: MutableList<Array<Team?>> = ArrayList(scheduleUnpacked.size / 2)
-        val packer: Iterator<Team?> = scheduleUnpacked.iterator()
+        val schedule: MutableList<Array<Team>> = ArrayList(scheduleUnpacked.size / 2)
+        val packer: Iterator<Team> = scheduleUnpacked.iterator()
         while (packer.hasNext()) {
             val pairing = arrayOf(packer.next(), packer.next())
             schedule.add(pairing)
@@ -224,9 +227,9 @@ class Division {
      * @return Full schedule, or null if none was found down this path
      */
     private fun dfsFindSchedule(
-        schedule: Deque<Team?>, remainingTeams: Array<Team?>, home: Boolean,
+        schedule: Deque<Team>, remainingTeams: Array<Team?>, home: Boolean,
         depth: Int, scheduleFirst: Team?
-    ): Deque<Team?>? {
+    ): Deque<Team>? {
         var teamScheduleFirst = scheduleFirst
         if (teamScheduleFirst == null) teamScheduleFirst = remainingTeams[0]
 
@@ -256,7 +259,7 @@ class Division {
             // Append home team to schedule
             val lastScheduled = schedule.peekLast()
             schedule.add(teamScheduleFirst)
-            val newRemainingTeams = remainingTeams.copyOfRange(1, remainingTeams.size)
+            val newRemainingTeams = remainingTeams.slice(1 until remainingTeams.size).toTypedArray()
             val homeTeam = remainingTeams[0]
             for (team in newRemainingTeams) {
                 if (homeTeam!!.teamsFaced.contains(team)) continue
@@ -264,7 +267,7 @@ class Division {
                 val path = dfsFindSchedule(schedule, newRemainingTeams, false, depth + 1, team)
                 if (path != null) return path
             }
-            var removed: Team?
+            var removed: Team
             do {
                 removed = schedule.removeLast()
             } while (removed !== lastScheduled)
@@ -288,14 +291,26 @@ class Division {
         for (team in teamList) {
             returned.append(team.toString())
                 .append(',')
-                .append(team!!.teamsFacedNames)
+                .append(team.teamsFacedNames)
                 .append('\n')
         }
         return returned.toString()
     }
 
-    fun getTeamList(): List<Team?> {
+    fun getTeamList(): List<Team> {
         return teamList
+    }
+
+    fun teamSkillRanks(): List<Int> {
+        return this.getTeamList().stream().map { team: Team? ->
+            val teams: MutableList<Team> = ArrayList(this.getTeamList())
+            teams.sortWith(Collections.reverseOrder { o1: Team, o2: Team ->
+                val diff = o1.team.skill - o2.team.skill
+                (if (diff >= 0) ceil(diff) else floor(diff)).toInt()
+            })
+            teams.indexOf(team)
+        }.toList()
+
     }
 
     private fun addTeams(noOfTeams: Int, skillStyle: SkillStyle) {
