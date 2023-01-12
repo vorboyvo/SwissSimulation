@@ -23,7 +23,7 @@ class Team(val name: String, val skill: Double) : Comparable<Team> {
     var roundsWon = 0
     var roundsLost = 0
     var matchPoints = 0
-    val teamsFaced: HashSet<Team> = HashSet()
+    val teamsFaced: MutableMap<Team, Int> = HashMap()
 
     constructor(bye: Boolean) : this("Bye Week", -999999.0) {
         if (!bye) throw UnsupportedOperationException("Cannot use this constructor except for bye!")
@@ -56,8 +56,8 @@ class Team(val name: String, val skill: Double) : Comparable<Team> {
             run {
                 var max = 0
                 var min = Int.MAX_VALUE // Really Big Number
-                for (team in this.teamsFaced) {
-                    thisMB += team.matchPoints
+                for ((team, playedCount) in this.teamsFaced) {
+                    otherMB += team.matchPoints * playedCount
                     max = max.coerceAtLeast(team.matchPoints)
                     min = min.coerceAtMost(team.matchPoints)
                 }
@@ -66,8 +66,8 @@ class Team(val name: String, val skill: Double) : Comparable<Team> {
             run {
                 var max = 0
                 var min = Int.MAX_VALUE // Really Big Number
-                for (team in other.teamsFaced) {
-                    otherMB += team.matchPoints
+                for ((team, playedCount) in other.teamsFaced) {
+                    otherMB += team.matchPoints * playedCount
                     max = max.coerceAtLeast(team.matchPoints)
                     min = min.coerceAtMost(team.matchPoints)
                 }
@@ -77,18 +77,18 @@ class Team(val name: String, val skill: Double) : Comparable<Team> {
         }
     }
 
-    val team: Team
-        get() = this
     val teamsFacedNames: ArrayList<String>
         get() {
             val list = ArrayList<String>()
-            for (team in teamsFaced) {
-                list.add(team.name)
+            for ((team, playedCount) in teamsFaced) {
+                for (i in 1..playedCount) {
+                    list.add(team.name)
+                }
             }
             return list
         }
 
     fun addTeamFaced(team: Team) {
-        teamsFaced.add(team)
+        this.teamsFaced[team] = this.teamsFaced.getOrDefault(team, 0) + 1
     }
 }

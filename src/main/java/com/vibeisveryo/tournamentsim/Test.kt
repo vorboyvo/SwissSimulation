@@ -68,33 +68,33 @@ object Test {
         // If the results are not deterministic, we have a problem regardless of potential randomness.
 
         // Add matches
-        main.addPreviousPair(teamList[0], teamList[1]).addPreviousPair(teamList[0], teamList[4]).addPreviousPair(
+        main.addMatchPlayed(teamList[0], teamList[1]).addMatchPlayed(teamList[0], teamList[4]).addMatchPlayed(
             teamList[0], teamList[5]
-        ).addPreviousPair(teamList[0], teamList[9]).addPreviousPair(teamList[1], teamList[2])
-            .addPreviousPair(teamList[1], teamList[3]).addPreviousPair(
+        ).addMatchPlayed(teamList[0], teamList[9]).addMatchPlayed(teamList[1], teamList[2])
+            .addMatchPlayed(teamList[1], teamList[3]).addMatchPlayed(
             teamList[1], teamList[7]
-        ).addPreviousPair(teamList[2], teamList[7]).addPreviousPair(teamList[2], teamList[13])
-            .addPreviousPair(teamList[2], teamList[14]).addPreviousPair(
+        ).addMatchPlayed(teamList[2], teamList[7]).addMatchPlayed(teamList[2], teamList[13])
+            .addMatchPlayed(teamList[2], teamList[14]).addMatchPlayed(
             teamList[3], teamList[8]
-        ).addPreviousPair(teamList[3], teamList[9]).addPreviousPair(teamList[3], teamList[10])
-            .addPreviousPair(teamList[4], teamList[5]).addPreviousPair(
+        ).addMatchPlayed(teamList[3], teamList[9]).addMatchPlayed(teamList[3], teamList[10])
+            .addMatchPlayed(teamList[4], teamList[5]).addMatchPlayed(
             teamList[4], teamList[12]
-        ).addPreviousPair(teamList[4], teamList[15]).addPreviousPair(teamList[5], teamList[6])
-            .addPreviousPair(teamList[5], teamList[12]).addPreviousPair(
+        ).addMatchPlayed(teamList[4], teamList[15]).addMatchPlayed(teamList[5], teamList[6])
+            .addMatchPlayed(teamList[5], teamList[12]).addMatchPlayed(
             teamList[6], teamList[9]
-        ).addPreviousPair(teamList[6], teamList[12]).addPreviousPair(teamList[6], teamList[15])
-            .addPreviousPair(teamList[7], teamList[8]).addPreviousPair(
+        ).addMatchPlayed(teamList[6], teamList[12]).addMatchPlayed(teamList[6], teamList[15])
+            .addMatchPlayed(teamList[7], teamList[8]).addMatchPlayed(
             teamList[7], teamList[13]
-        ).addPreviousPair(teamList[8], teamList[13]).addPreviousPair(teamList[8], teamList[14])
-            .addPreviousPair(teamList[9], teamList[11]).addPreviousPair(
+        ).addMatchPlayed(teamList[8], teamList[13]).addMatchPlayed(teamList[8], teamList[14])
+            .addMatchPlayed(teamList[9], teamList[11]).addMatchPlayed(
             teamList[10], teamList[11]
-        ).addPreviousPair(teamList[10], teamList[12]).addPreviousPair(teamList[10], teamList[15]).addPreviousPair(
+        ).addMatchPlayed(teamList[10], teamList[12]).addMatchPlayed(teamList[10], teamList[15]).addMatchPlayed(
             teamList[11], teamList[13]
-        ).addPreviousPair(teamList[11], teamList[14]).addPreviousPair(teamList[14], teamList[15])
+        ).addMatchPlayed(teamList[11], teamList[14]).addMatchPlayed(teamList[14], teamList[15])
         println(
             main.scheduleWeek().stream()
                 .map { a: Array<Team>? ->
-                    Arrays.deepToString(Arrays.stream(a).map { b: Team -> b.team.name }
+                    Arrays.deepToString(Arrays.stream(a).map { b: Team -> b.name }
                         .toArray())
                 }.toList()
         )

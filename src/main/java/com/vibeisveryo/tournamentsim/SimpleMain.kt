@@ -17,12 +17,15 @@
 package com.vibeisveryo.tournamentsim
 
 import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSwissMatches
+import com.vibeisveryo.tournamentsim.tournament.Division
 import java.io.IOException
 
 object SimpleMain {
     @Throws(IOException::class)
     @JvmStatic
-    fun main(args: Array<String>) {
-        benchSwissMatches(100, 34)
+    fun main(vararg args: String) {
+        val main = Division("Main", 16, Division.SkillStyle.RANDOM_NORMAL)
+        main.verbosityLevel = Division.VerbosityLevel.DETAILED
+        main.swissRunTupleMatches(7,2)
     }
 }

@@ -34,48 +34,45 @@ class Division {
     private val name: String
     private val teamList // Should always be sorted by any action modifying the team list!
             : MutableList<Team>
-    private val verbosityLevel // TODO add functionality
+    var verbosityLevel // TODO add functionality
             : VerbosityLevel
     private val random: Random
 
     constructor(name: String, noOfTeams: Int, skillStyle: SkillStyle) {
         this.name = name
-        teamList = ArrayList()
-        verbosityLevel = VerbosityLevel.NONE
-        random = Random()
+        this.teamList = ArrayList()
+        this.verbosityLevel = VerbosityLevel.NONE
+        this.random = Random()
         addTeams(noOfTeams, skillStyle)
     }
 
-    constructor(name: String, noOfTeams: Int, skillStyle: SkillStyle, seed: Long?) {
+    constructor(name: String, noOfTeams: Int, skillStyle: SkillStyle, seed: Long) {
         this.name = name
-        teamList = ArrayList()
-        verbosityLevel = VerbosityLevel.NONE
-        random = Random(seed!!)
+        this.teamList = ArrayList()
+        this.verbosityLevel = VerbosityLevel.NONE
+        this.random = Random(seed)
         addTeams(noOfTeams, skillStyle)
     }
 
-    constructor(name: String, teamList: MutableList<Team>) {
+    constructor(name: String, teamList: List<Team>) {
         this.name = name
-        this.teamList = teamList
-        verbosityLevel = VerbosityLevel.NONE
-        random = Random()
+        this.teamList = ArrayList()
+        this.teamList.addAll(teamList)
+        this.verbosityLevel = VerbosityLevel.NONE
+        this.random = Random()
     }
 
-    constructor(name: String, teamList: MutableList<Team>, seed: Long?) {
+    constructor(name: String, teamList: List<Team>, seed: Long) {
         this.name = name
-        this.teamList = teamList
-        verbosityLevel = VerbosityLevel.NONE
-        random = Random(seed!!)
+        this.teamList = ArrayList()
+        this.teamList.addAll(teamList)
+        this.verbosityLevel = VerbosityLevel.NONE
+        this.random = Random(seed)
     }
 
     private fun runMatch(homeTeam: Team, awayTeam: Team, koth: Boolean): Match {
         val myMatch: Match = if (!homeTeam.isBye && !awayTeam.isBye) {
-            Match(
-                homeTeam.team.skill,
-                awayTeam.team.skill,
-                koth,
-                random
-            )
+            Match( homeTeam.skill, awayTeam.skill, koth, random)
         } else if (homeTeam.isBye) {
             Match(true)
         } else {
@@ -83,15 +80,13 @@ class Division {
         }
         homeTeam.addMatch(myMatch.homeResult)
         awayTeam.addMatch(myMatch.awayResult)
-        homeTeam.teamsFaced.add(awayTeam)
-        awayTeam.teamsFaced.add(homeTeam)
         return myMatch
     }
 
-    fun addPreviousPair(vararg args: Team): Division {
+    fun addMatchPlayed(vararg args: Team): Division {
         require(args.size == 2) { "Must have two arguments!" }
-        args[0].teamsFaced.add(args[1])
-        args[1].teamsFaced.add(args[0])
+        args[0].teamsFaced[args[1]] = args[0].teamsFaced.getOrDefault(args[1], 0) + 1
+        args[1].teamsFaced[args[0]] = args[1].teamsFaced.getOrDefault(args[0], 0) + 1
         // Return this for convenience
         return this
     }
@@ -131,8 +126,9 @@ class Division {
             // printed.append("Week ").append(i).append(": ").append(week);
             val koth = i % 2 != 0
             for (pairing in week) {
-                val match = runMatch(pairing[0], pairing[1], koth)
+                runMatch(pairing[0], pairing[1], koth)
                 // printed.append(" ").append(match);
+                addMatchPlayed(pairing[0], pairing[1])
             }
             // System.out.println(printed);
         }
@@ -158,16 +154,31 @@ class Division {
             if (byeRemoved) teamList.add(byeTeam)
 
             // Schedule matches by Swiss
+            if (this.verbosityLevel >= VerbosityLevel.MINIMAL) {
+                println("==================================================")
+                println("Scheduling matches for week $weekNo")
+                println("==================================================")
+            }
             val schedule = scheduleWeek()
             matches.add(schedule.toTypedArray())
+
+            if (this.verbosityLevel >= VerbosityLevel.DETAILED) {
+                println("Schedule: " + schedule.map {
+                    "[${it[0].name}, ${it[1].name}]"
+                })
+            }
 
             // Run matches
             for (pairing in schedule) {
                 runMatch(pairing[0], pairing[1], weekNo % 2 != 0)
+                addMatchPlayed(pairing[0], pairing[1])
             }
 
             // Sort team list
             teamList.sortWith(Collections.reverseOrder())
+            if (this.verbosityLevel >= VerbosityLevel.MINIMAL) {
+                println(this)
+            }
         }
         return matches
     }
@@ -180,14 +191,73 @@ class Division {
         // Make list of matches
         val matches: MutableList<Array<Array<Team>>> = ArrayList()
         // Play the week's matches and make necessary adjustments for each week
-        for (weekNo in 0 until matchCount) {
+        for (weekNo in 1..matchCount) {
             // Schedule matches
+            if (this.verbosityLevel >= VerbosityLevel.MINIMAL) {
+                println("==================================================")
+                println("Scheduling matches for week $weekNo")
+                println("==================================================")
+            }
             val schedule = scheduleWeek()
             matches.add(schedule.toTypedArray())
+
+            if (this.verbosityLevel >= VerbosityLevel.DETAILED) {
+                println("Schedule: " + schedule.map {
+                    "[${it[0].name}, ${it[1].name}]"
+                })
+            }
 
             // Run matches
             for (pairing in schedule) {
                 runMatch(pairing[0], pairing[1], weekNo % 2 != 0)
+                addMatchPlayed(pairing[0], pairing[1])
+            }
+
+            // Sort team list
+            teamList.sortWith(Collections.reverseOrder())
+
+            if (this.verbosityLevel >= VerbosityLevel.MINIMAL) {
+                println(this)
+            }
+        }
+        return matches
+    }
+
+    fun swissRunTupleMatches(weekCount: Int, matchesPerWeek: Int): List<Array<Array<Team>>> {
+        // Make list of matches
+        val matches: MutableList<Array<Array<Team>>> = ArrayList()
+        // Play the week's matches and make necessary adjustments for each week
+        for (weekNo in 1..weekCount) {
+            if (this.verbosityLevel >= VerbosityLevel.MINIMAL) {
+                println("==================================================")
+                println("Scheduling matches for week $weekNo")
+                println("==================================================")
+            }
+            val weekSchedule = ArrayList<Array<Array<Team>>>();
+            for (matchNo in 1..matchesPerWeek) {
+                // Schedule matches
+                val round = scheduleWeek().toTypedArray()
+                weekSchedule.add(round)
+                matches.add(round)
+                if (this.verbosityLevel >= VerbosityLevel.DETAILED) {
+                    println("Week $weekNo${'A'-1+matchNo}: " + round.map {
+                        "[${it[0].name}, ${it[1].name}]"
+                    })
+                }
+                for (pairing in round) {
+                    addMatchPlayed(pairing[0], pairing[1])
+                }
+            }
+
+            // Run matches
+            for (round in weekSchedule) {
+                for (pairing in round) {
+                    runMatch(pairing[0], pairing[1], weekNo % 2 != 0)
+                }
+            }
+
+            if (this.verbosityLevel >= VerbosityLevel.MINIMAL) {
+                println(this)
             }
 
             // Sort team list
@@ -262,7 +332,7 @@ class Division {
             val newRemainingTeams = remainingTeams.slice(1 until remainingTeams.size).toTypedArray()
             val homeTeam = remainingTeams[0]
             for (team in newRemainingTeams) {
-                if (homeTeam!!.teamsFaced.contains(team)) continue
+                if (homeTeam!!.teamsFaced.getOrDefault(team, 0) > 0) continue
                 // Recur on newRemainingTeams
                 val path = dfsFindSchedule(schedule, newRemainingTeams, false, depth + 1, team)
                 if (path != null) return path
@@ -305,7 +375,7 @@ class Division {
         return this.getTeamList().stream().map { team: Team? ->
             val teams: MutableList<Team> = ArrayList(this.getTeamList())
             teams.sortWith(Collections.reverseOrder { o1: Team, o2: Team ->
-                val diff = o1.team.skill - o2.team.skill
+                val diff = o1.skill - o2.skill
                 (if (diff >= 0) ceil(diff) else floor(diff)).toInt()
             })
             teams.indexOf(team)
