@@ -77,7 +77,6 @@ object Benchmark {
         var max = 0
         var mean = 0.0
         var vari = 0.0
-        var median = 0.0
         for (i in 0 until iters) {
             mean += durations[i].toDouble()
             if (durations[i] < min) min = durations[i]
@@ -90,7 +89,7 @@ object Benchmark {
         vari /= iters.toDouble()
         val stdev: Double = sqrt(vari)
         Arrays.sort(durations)
-        median = if (iters % 2 == 0) {
+        var median: Double = if (iters % 2 == 0) {
             (durations[iters / 2 - 1] + durations[iters / 2]) / 2.0
         } else {
             durations[iters / 2].toDouble()

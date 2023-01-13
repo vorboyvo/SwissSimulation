@@ -34,14 +34,14 @@ object MeasureSwiss {
     @Throws(IOException::class)
     fun measureDistortionsOverMatches(
         matchStart: Int, matchStop: Int, teamCount: Int, iterations: Int,
-        skillStyle: SkillStyle?
+        skillStyle: SkillStyle
     ) {
         val outWriter = OutWriter("distortions_matches", "matches", "distortions")
 
         // Do the iters
         for (i in 0 until iterations) {
             for (matchCount in matchStart until matchStop) {
-                val main = Division("Main", teamCount, skillStyle!!)
+                val main = Division("Main", teamCount, skillStyle)
                 main.swissRunMatches(matchCount)
                 val distortions = Distortions.getDistortions(main)
                 outWriter.print(
@@ -57,17 +57,17 @@ object MeasureSwiss {
     @Throws(IOException::class)
     fun measureCombinedDistortions(
         matchesStart: Int, teamsStart: Int, teamsStop: Int,
-        iterations: Int, skillStyle: SkillStyle?
+        iterations: Int, skillStyle: SkillStyle
     ) {
         val outWriter = OutWriter("distortions_combined", "matches", "teams", "distortions")
 
         // Do the iters
         for (i in 0 until iterations) {
             val startTime = Instant.now()
-            for (teamCount in teamsStart until teamsStop) {
-                var matchCount = matchesStart
-                while (matchCount < ceil(teamCount / 2.0) * 2 - 2) {
-                    val main = Division("Main", teamCount, skillStyle!!)
+            for (teamCount in teamsStart .. teamsStop) {
+                for (matchCount in matchesStart .. (ceil(teamCount / 2.0) * 2 - 3).toInt()) {
+                    val main = Division("Main", teamCount, skillStyle)
+                    main.verbosityLevel = Division.VerbosityLevel.MINIMAL
                     main.swissRunMatches(matchCount)
                     val distortions = Distortions.getDistortions(main)
                     outWriter.addRecord(
@@ -75,7 +75,41 @@ object MeasureSwiss {
                         teamCount,
                         String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
                     )
-                    matchCount++
+                }
+            }
+            outWriter.print()
+            val endTime = Instant.now()
+            val time = Duration.between(startTime, endTime).toNanos()
+            if (i % 10.0.pow(floor(log10((iterations - 1).toDouble()))) == 0.0
+                || time > TimeUnit.SECONDS.toNanos(1L)
+            ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
+        }
+
+        // Output CSV
+        outWriter.close()
+    }
+
+    @JvmStatic
+    @Throws(IOException::class)
+    fun measureCombinedDistortionsTwoMatches(
+        weeksStart: Int, teamsStart: Int, teamsStop: Int,
+        iterations: Int, skillStyle: SkillStyle
+    ) {
+        val outWriter = OutWriter("distortions_combined_double", "matches", "teams", "distortions")
+
+        // Do the iters
+        for (i in 0 until iterations) {
+            val startTime = Instant.now()
+            for (teamCount in teamsStart .. teamsStop) {
+                for (weekCount in weeksStart .. (ceil(teamCount / 2.0) - 2).toInt()) {
+                    val main = Division("Main", teamCount, skillStyle)
+                    main.swissRunTupleMatches(weekCount,2)
+                    val distortions = Distortions.getDistortions(main)
+                    outWriter.addRecord(
+                        weekCount*2,
+                        teamCount,
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                    )
                 }
             }
             outWriter.print()
@@ -104,7 +138,7 @@ object MeasureSwiss {
         // Do the iters
         for (i in 0 until iterations) {
             val startTime = Instant.now()
-            for (teamCount in teamsStart until teamsStop) {
+            for (teamCount in teamsStart .. teamsStop) {
                 var matchCount = matchesStart
                 while (matchCount < (if (matchesStop < 0) (ceil(teamCount / 2.0) * 2 - 2).toInt() else matchesStop)) {
                     val main = Division("Main", teamCount, skillStyle!!)
@@ -130,29 +164,6 @@ object MeasureSwiss {
 
         // Output CSV
         outWriter.close()
-    }
-
-    @Throws(IOException::class)
-    fun getDistortionsSource(iterations: Int) {
-        val teamCount = 16
-        val matchCount = 7
-        val outWriter = OutWriter("distortions_source", "skillRank", "leagueTableRank")
-        for (i in 0 until iterations) {
-            val startTime = Instant.now()
-            val main = Division("Main", teamCount, SkillStyle.UNIFORM)
-            main.swissRunMatches(matchCount)
-            // Get team skill rank
-            val teamSkillRanks = main.teamSkillRanks()
-            for (j in 0 until teamCount) {
-                outWriter.addRecord(teamSkillRanks[j], j)
-            }
-            outWriter.print()
-            val endTime = Instant.now()
-            val time = Duration.between(startTime, endTime).toNanos()
-            if (i % 10.0.pow(floor(log10((iterations - 1).toDouble()))) == 0.0
-                || time > TimeUnit.SECONDS.toNanos(1L)
-            ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
-        }
     }
 
     @Throws(IOException::class)

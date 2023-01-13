@@ -16,7 +16,9 @@
  */
 package com.vibeisveryo.tournamentsim
 
+import com.vibeisveryo.tournamentsim.benchmarking.Benchmark
 import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSwissMatches
+import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss
 import com.vibeisveryo.tournamentsim.tournament.Division
 import java.io.IOException
 
@@ -24,8 +26,7 @@ object SimpleMain {
     @Throws(IOException::class)
     @JvmStatic
     fun main(vararg args: String) {
-        val main = Division("Main", 16, Division.SkillStyle.RANDOM_NORMAL)
-        main.verbosityLevel = Division.VerbosityLevel.DETAILED
-        main.swissRunTupleMatches(7,2)
+        MeasureSwiss.measureCombinedDistortionsTwoMatches(1,10,36,1000,Division.SkillStyle.UNIFORM)
+        MeasureSwiss.measureCombinedDistortions(1,10,36,1000,Division.SkillStyle.UNIFORM)
     }
 }

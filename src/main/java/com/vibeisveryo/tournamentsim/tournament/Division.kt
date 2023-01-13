@@ -85,8 +85,8 @@ class Division {
 
     fun addMatchPlayed(vararg args: Team): Division {
         require(args.size == 2) { "Must have two arguments!" }
-        args[0].teamsFaced[args[1]] = args[0].teamsFaced.getOrDefault(args[1], 0) + 1
-        args[1].teamsFaced[args[0]] = args[1].teamsFaced.getOrDefault(args[0], 0) + 1
+        args[0].teamsFaced.add(args[1])
+        args[1].teamsFaced.add(args[0])
         // Return this for convenience
         return this
     }
@@ -256,12 +256,11 @@ class Division {
                 }
             }
 
+            // Sort team list
+            teamList.sortWith(Collections.reverseOrder())
             if (this.verbosityLevel >= VerbosityLevel.MINIMAL) {
                 println(this)
             }
-
-            // Sort team list
-            teamList.sortWith(Collections.reverseOrder())
         }
         return matches
     }
@@ -332,7 +331,7 @@ class Division {
             val newRemainingTeams = remainingTeams.slice(1 until remainingTeams.size).toTypedArray()
             val homeTeam = remainingTeams[0]
             for (team in newRemainingTeams) {
-                if (homeTeam!!.teamsFaced.getOrDefault(team, 0) > 0) continue
+                if (team in homeTeam!!.teamsFaced) continue
                 // Recur on newRemainingTeams
                 val path = dfsFindSchedule(schedule, newRemainingTeams, false, depth + 1, team)
                 if (path != null) return path
