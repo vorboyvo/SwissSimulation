@@ -33,7 +33,7 @@ class OutWriter(title: String, vararg headerValues: Any?) {
         // Create output file
         val dateTime = DateTimeFormatter.ofPattern("MMddyyyyHHmmss").format(ZonedDateTime.now())
         val outputFile = File("results/" + title + "_" + dateTime + ".csv")
-        if (outputFile.parentFile.mkdirs()) {
+        if (!outputFile.parentFile.mkdirs()) {
             println("Parent directory already exists")
         }
         if (!outputFile.createNewFile()) {

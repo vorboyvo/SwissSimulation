@@ -88,7 +88,7 @@ class Match {
     companion object {
         private const val ODDS_SCALING_FACTOR = 2
         private fun runRound(homeWinChance: Double, random: Random): Boolean {
-            return random.nextInt(100 + 1) < homeWinChance * 100
+            return random.nextInt(0,100 + 1) < homeWinChance * 100
         }
 
         fun getMatchPoints(homeRoundsWon: Int, awayRoundsWon: Int): IntArray {
