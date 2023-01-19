@@ -27,23 +27,27 @@ object Distortions {
      *
      * @return the absolute value of the sum of all distortions, divided by the number of teams.
      */
-    fun getDistortions(division: Division): List<Int> {
+    fun getDistortions(division: Division, matchCount: Int): List<Double> {
         // Get team skill rank
         val teamSkillRanks = division.teamSkillRanks()
         // Return abs value of distortions
-        return IntStream.range(0, division.getTeamList().size)
-            .mapToObj { i: Int -> abs(i - teamSkillRanks[i]) }.toList()
+        //return IntStream.range(0, division.getTeamList().size)
+        //    .mapToObj { i: Int -> abs(i - teamSkillRanks[i]) }.toList()
+        val expectedMatchPoints = division.teamExpectedMatchPoints(matchCount)
+        return division.getTeamList().map {
+            it.matchPoints - expectedMatchPoints[it]!!
+        }
     }
 
-    fun sumDistortionsPerTeam(distortions: List<Int?>?): Double {
-        return distortions!!.stream().mapToDouble { k: Int? -> abs(k!!) / distortions.size.toDouble() }.sum()
+    fun sumDistortionsPerTeam(distortions: List<Double>): Double {
+        return distortions.stream().mapToDouble { k: Double -> abs(k) / distortions.size.toDouble() }.sum()
     }
 
-    fun sumFractionalDistortions(distortions: List<Int?>?, fraction: Double): Double {
-        val teamsMeasured = (distortions!!.size / fraction).roundToInt()
-        return distortions.subList(0, teamsMeasured).stream().mapToDouble { l: Int? ->
+    fun sumFractionalDistortions(distortions: List<Double>, fraction: Double): Double {
+        val teamsMeasured = (distortions.size / fraction).roundToInt()
+        return distortions.subList(0, teamsMeasured).stream().mapToDouble { l: Double ->
             abs(
-                l!!
+                l
             ) / teamsMeasured.toDouble()
         }.sum()
     }

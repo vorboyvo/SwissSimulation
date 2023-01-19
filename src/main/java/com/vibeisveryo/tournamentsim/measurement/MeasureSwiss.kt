@@ -31,28 +31,6 @@ import kotlin.math.log10
 import kotlin.math.pow
 
 object MeasureSwiss {
-    @JvmStatic
-    @Throws(IOException::class)
-    fun measureDistortionsOverMatches(
-        matchStart: Int, matchStop: Int, teamCount: Int, iterations: Int,
-        skillStyle: SkillStyle
-    ) {
-        val outWriter = OutWriter("distortions_matches", "matches", "distortions")
-
-        // Do the iters
-        for (i in 0 until iterations) {
-            for (matchCount in matchStart until matchStop) {
-                val main = Division("Main", teamCount, skillStyle)
-                Swiss.swissRunMatches(main, matchCount)
-                val distortions = Distortions.getDistortions(main)
-                outWriter.print(
-                    matchCount, String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
-                )
-            }
-        }
-        // Close writer
-        outWriter.close()
-    }
 
     @JvmStatic
     @Throws(IOException::class)
@@ -60,7 +38,7 @@ object MeasureSwiss {
         matchesStart: Int, teamsStart: Int, teamsStop: Int,
         iterations: Int, skillStyle: SkillStyle
     ) {
-        val outWriter = OutWriter("distortions_combined", "matches", "teams", "distortions")
+        val outWriter = OutWriter("distortions_swiss_combined", "matches", "teams", "distortions")
 
         // Do the iters
         for (i in 0 until iterations) {
@@ -69,7 +47,7 @@ object MeasureSwiss {
                 for (matchCount in matchesStart .. (ceil(teamCount / 2.0) * 2 - 3).toInt()) {
                     val main = Division("Main", teamCount, skillStyle)
                     Swiss.swissRunMatches(main, matchCount)
-                    val distortions = Distortions.getDistortions(main)
+                    val distortions = Distortions.getDistortions(main, matchCount)
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
@@ -95,7 +73,7 @@ object MeasureSwiss {
         weeksStart: Int, teamsStart: Int, teamsStop: Int,
         iterations: Int, skillStyle: SkillStyle
     ) {
-        val outWriter = OutWriter("distortions_combined_double", "matches", "teams", "distortions")
+        val outWriter = OutWriter("distortions_swiss_combined_double", "matches", "teams", "distortions")
 
         // Do the iters
         for (i in 0 until iterations) {
@@ -104,7 +82,7 @@ object MeasureSwiss {
                 for (weekCount in weeksStart .. (ceil(teamCount / 2.0) - 2).toInt()) {
                     val main = Division("Main", teamCount, skillStyle)
                     Swiss.swissRunTupleMatches(main, weekCount,2)
-                    val distortions = Distortions.getDistortions(main)
+                    val distortions = Distortions.getDistortions(main, weekCount*2)
                     outWriter.addRecord(
                         weekCount*2,
                         teamCount,
@@ -131,7 +109,7 @@ object MeasureSwiss {
         skillStyle: SkillStyle?
     ) {
         val outWriter = OutWriter(
-            "distortions_combined", "matches", "teams",
+            "distortions_swiss_combined_fractional", "matches", "teams",
             "distortionstophalf", "distortionstoptwothirds", "distortions"
         )
 
@@ -143,7 +121,7 @@ object MeasureSwiss {
                 while (matchCount < (if (matchesStop < 0) (ceil(teamCount / 2.0) * 2 - 2).toInt() else matchesStop)) {
                     val main = Division("Main", teamCount, skillStyle!!)
                     Swiss.swissRunMatches(main, matchCount)
-                    val distortions = Distortions.getDistortions(main)
+                    val distortions = Distortions.getDistortions(main, matchCount)
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
@@ -169,7 +147,7 @@ object MeasureSwiss {
     @Throws(IOException::class)
     fun getStandingsOverASeason(iterations: Int, matchCount: Int, teamCount: Int) {
         val outWriter =
-            OutWriter("standings_weeks_${teamCount}teams", "week", "skillRank", "leagueTableRank")
+            OutWriter("standings_weeks_swiss_${teamCount}teams", "week", "skillRank", "leagueTableRank")
         for (i in 0 until iterations) {
             val startTime = Instant.now()
             val main = Division("Main", teamCount, SkillStyle.UNIFORM)

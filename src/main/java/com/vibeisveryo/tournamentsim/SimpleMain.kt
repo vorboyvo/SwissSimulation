@@ -16,17 +16,13 @@
  */
 package com.vibeisveryo.tournamentsim
 
+import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss
 import com.vibeisveryo.tournamentsim.simulation.Division
 import com.vibeisveryo.tournamentsim.tournament.Swiss
 
 object SimpleMain {
     @JvmStatic
     fun main(vararg args: String) {
-        val main = Division("Main", 12, Division.SkillStyle.UNIFORM)
-        Swiss.swissRunMatches(main, 7)
-        val expectedMatchPoints = main.teamExpectedMatchPoints(7).toSortedMap(Comparator.reverseOrder())
-        for ((key, value) in expectedMatchPoints) {
-            println("$key $value")
-        }
+        MeasureSwiss.measureCombinedDistortions(1, 10, 32, 500, Division.SkillStyle.TRUE_RANDOM)
     }
 }

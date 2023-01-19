@@ -39,7 +39,7 @@ object MeasureRandomThenSwiss {
         // Do the iters
         for (i in 0 until iterations) {
             val startTime = Instant.now()
-            for (teamCount in teamsStart until teamsStop) {
+            for (teamCount in teamsStart..teamsStop) {
                 var matchCount = matchesStart
                 while (matchCount < ceil(teamCount / 2.0) * 2 - 2) {
                     val randMatchCount = ceil(matchCount * propRandom).toInt()
@@ -47,7 +47,7 @@ object MeasureRandomThenSwiss {
                     val main = Division("Main", teamCount, skillStyle!!)
                     Swiss.randomRunMatches(main, randMatchCount)
                     Swiss.swissRunMatches(main, swissMatchCount)
-                    val distortions = Distortions.getDistortions(main)
+                    val distortions = Distortions.getDistortions(main, matchCount)
                     outWriter.addRecord(
                         matchCount,
                         teamCount,

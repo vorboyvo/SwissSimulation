@@ -46,7 +46,7 @@ object MeasureRandom {
                 while (matchCount < ceil(teamCount / 2.0) * 2 - 2) {
                     val main = Division("Main", teamCount, skillStyle!!)
                     Swiss.randomRunMatches(main, matchCount)
-                    val distortions = Distortions.getDistortions(main)
+                    val distortions = Distortions.getDistortions(main, matchCount)
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
