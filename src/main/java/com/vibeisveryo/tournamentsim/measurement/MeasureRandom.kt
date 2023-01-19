@@ -16,8 +16,9 @@
  */
 package com.vibeisveryo.tournamentsim.measurement
 
-import com.vibeisveryo.tournamentsim.tournament.Division
-import com.vibeisveryo.tournamentsim.tournament.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.simulation.Division
+import com.vibeisveryo.tournamentsim.simulation.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.tournament.Swiss
 import com.vibeisveryo.tournamentsim.util.OutWriter
 import java.io.IOException
 import java.time.Duration
@@ -44,7 +45,7 @@ object MeasureRandom {
                 var matchCount = matchesStart
                 while (matchCount < ceil(teamCount / 2.0) * 2 - 2) {
                     val main = Division("Main", teamCount, skillStyle!!)
-                    main.randomRunMatches(matchCount)
+                    Swiss.randomRunMatches(main, matchCount)
                     val distortions = Distortions.getDistortions(main)
                     outWriter.addRecord(
                         matchCount,
@@ -73,7 +74,7 @@ object MeasureRandom {
             val startTime = Instant.now()
             val main = Division("Main", teamCount, SkillStyle.UNIFORM)
             for (week in 0 until matchCount) {
-                main.randomRunMatches(1)
+                Swiss.randomRunMatches(main, 1)
                 // Get team skill rank
                 val teamSkillRanks = main.teamSkillRanks()
                 for (j in 0 until teamCount) {

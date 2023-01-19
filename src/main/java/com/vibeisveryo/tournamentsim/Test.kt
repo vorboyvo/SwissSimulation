@@ -16,8 +16,9 @@
  */
 package com.vibeisveryo.tournamentsim
 
-import com.vibeisveryo.tournamentsim.tournament.Division
-import com.vibeisveryo.tournamentsim.tournament.Team
+import com.vibeisveryo.tournamentsim.simulation.Division
+import com.vibeisveryo.tournamentsim.simulation.Team
+import com.vibeisveryo.tournamentsim.tournament.Swiss
 import java.util.*
 
 object Test {
@@ -92,7 +93,7 @@ object Test {
             teamList[11], teamList[13]
         ).addMatchPlayed(teamList[11], teamList[14]).addMatchPlayed(teamList[14], teamList[15])
         println(
-            main.scheduleWeek().stream()
+            Swiss.scheduleWeek(main).stream()
                 .map { a: Array<Team>? ->
                     Arrays.deepToString(Arrays.stream(a).map { b: Team -> b.name }
                         .toArray())

@@ -16,8 +16,9 @@
  */
 package com.vibeisveryo.tournamentsim.measurement
 
-import com.vibeisveryo.tournamentsim.tournament.Division
-import com.vibeisveryo.tournamentsim.tournament.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.simulation.Division
+import com.vibeisveryo.tournamentsim.simulation.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.tournament.Swiss
 import com.vibeisveryo.tournamentsim.util.OutWriter
 import java.io.IOException
 import java.time.Duration
@@ -42,7 +43,7 @@ object MeasureSwiss {
         for (i in 0 until iterations) {
             for (matchCount in matchStart until matchStop) {
                 val main = Division("Main", teamCount, skillStyle)
-                main.swissRunMatches(matchCount)
+                Swiss.swissRunMatches(main, matchCount)
                 val distortions = Distortions.getDistortions(main)
                 outWriter.print(
                     matchCount, String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
@@ -67,8 +68,7 @@ object MeasureSwiss {
             for (teamCount in teamsStart .. teamsStop) {
                 for (matchCount in matchesStart .. (ceil(teamCount / 2.0) * 2 - 3).toInt()) {
                     val main = Division("Main", teamCount, skillStyle)
-                    main.verbosityLevel = Division.VerbosityLevel.MINIMAL
-                    main.swissRunMatches(matchCount)
+                    Swiss.swissRunMatches(main, matchCount)
                     val distortions = Distortions.getDistortions(main)
                     outWriter.addRecord(
                         matchCount,
@@ -103,7 +103,7 @@ object MeasureSwiss {
             for (teamCount in teamsStart .. teamsStop) {
                 for (weekCount in weeksStart .. (ceil(teamCount / 2.0) - 2).toInt()) {
                     val main = Division("Main", teamCount, skillStyle)
-                    main.swissRunTupleMatches(weekCount,2)
+                    Swiss.swissRunTupleMatches(main, weekCount,2)
                     val distortions = Distortions.getDistortions(main)
                     outWriter.addRecord(
                         weekCount*2,
@@ -142,7 +142,7 @@ object MeasureSwiss {
                 var matchCount = matchesStart
                 while (matchCount < (if (matchesStop < 0) (ceil(teamCount / 2.0) * 2 - 2).toInt() else matchesStop)) {
                     val main = Division("Main", teamCount, skillStyle!!)
-                    main.swissRunMatches(matchCount)
+                    Swiss.swissRunMatches(main, matchCount)
                     val distortions = Distortions.getDistortions(main)
                     outWriter.addRecord(
                         matchCount,
@@ -174,7 +174,7 @@ object MeasureSwiss {
             val startTime = Instant.now()
             val main = Division("Main", teamCount, SkillStyle.UNIFORM)
             for (week in 0 until matchCount) {
-                main.swissRunMatches(1)
+                Swiss.swissRunMatches(main, 1)
                 // Get team skill rank
                 val teamSkillRanks = main.teamSkillRanks()
                 for (j in 0 until teamCount) {

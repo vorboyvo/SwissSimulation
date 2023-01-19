@@ -14,9 +14,12 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.tournamentsim.tournament
+package com.vibeisveryo.tournamentsim.simulation
 
+import com.vibeisveryo.tournamentsim.util.ArrayMatch
 import java.util.*
+import kotlin.math.exp
+import kotlin.math.roundToInt
 
 class Match {
     val homeResult: MatchResult
@@ -38,7 +41,7 @@ class Match {
      */
     constructor(homeSkill: Double, awaySkill: Double, koth: Boolean, random: Random) {
         val diff = homeSkill - awaySkill
-        val homeWinChance = 1 / (1 + Math.exp(-1 * ODDS_SCALING_FACTOR * diff))
+        val homeWinChance = 1 / (1 + exp(-1 * ODDS_SCALING_FACTOR * diff))
 
         // Run first to 4 on koth or 2 on stopwatch
         val winLimit = if (koth) 4 else 2
@@ -56,22 +59,19 @@ class Match {
         val matchPoints = getMatchPoints(homeRoundsWon, awayRoundsWon)
         val homeMatchPoints = matchPoints[0]
         val awayMatchPoints = matchPoints[1]
-        val inqMatchPoints = getInqMatchPoints(homeRoundsWon, awayRoundsWon)
-        val homeInqMatchPoints = inqMatchPoints[0]
-        val awayInqMatchPoints = inqMatchPoints[1]
 
         // Treat stopwatch rounds as 2 each - doing this after the above because bug discovered
         if (!koth) {
             homeRoundsWon *= 2
             awayRoundsWon *= 2
         }
-        homeResult = MatchResult(winner, homeRoundsWon, awayRoundsWon, homeMatchPoints, homeInqMatchPoints)
-        awayResult = MatchResult(!winner, awayRoundsWon, homeRoundsWon, awayMatchPoints, awayInqMatchPoints)
+        homeResult = MatchResult(winner, homeRoundsWon, awayRoundsWon, homeMatchPoints)
+        awayResult = MatchResult(!winner, awayRoundsWon, homeRoundsWon, awayMatchPoints)
     }
 
     constructor(homeIsBye: Boolean) {
-        val byeResult = MatchResult(false, 0, 4, 0, 0.0)
-        val nonByeResult = MatchResult(true, 4, 0, 9, 9.0)
+        val byeResult = MatchResult(false, 0, 4, 0)
+        val nonByeResult = MatchResult(true, 4, 0, 9)
         if (homeIsBye) {
             homeResult = byeResult
             awayResult = nonByeResult
@@ -91,12 +91,42 @@ class Match {
             return random.nextInt(0,100 + 1) < homeWinChance * 100
         }
 
-        fun getMatchPoints(homeRoundsWon: Int, awayRoundsWon: Int): IntArray {
-            val koth = Math.max(homeRoundsWon, awayRoundsWon) == 4
+        fun getExpectedMatchPoints(homeSkill: Double, awaySkill: Double): DoubleArray {
+            val diff = homeSkill - awaySkill
+            val homeWinChance = 1 / (1 + exp(-1 * ODDS_SCALING_FACTOR * diff))
+
+            // Get average of results for koth and stopwatch
+            val gameTypes = arrayOfNulls<IntArray>(2)
+            for ((arrayTicker, winLimit) in intArrayOf(2, 4).withIndex()) {
+                var homeRoundsWon: Int
+                var awayRoundsWon: Int
+                val possibleLoserRounds = (winLimit until (winLimit*2)).map {winLimit.toDouble()/it}
+                    .toTypedArray()
+
+                if (homeWinChance > 0.5) {
+                    homeRoundsWon = winLimit
+                    awayRoundsWon = ((winLimit.toDouble() / ArrayMatch.findClosestArrayMatch(homeWinChance, possibleLoserRounds))
+                            -winLimit).roundToInt()
+                } else if (homeWinChance < 0.5) {
+                    homeRoundsWon = ((winLimit.toDouble() / ArrayMatch.findClosestArrayMatch(1-homeWinChance, possibleLoserRounds))
+                            -winLimit).roundToInt()
+                    awayRoundsWon = winLimit
+                } else {
+                    throw RuntimeException("Cannot check expected win chance for teams with equal skill")
+                }
+                gameTypes[arrayTicker] = getMatchPoints(homeRoundsWon, awayRoundsWon)
+            }
+            val homeMatchPoints: Double = gameTypes.map { it!![0] }.average()
+            val awayMatchPoints: Double = gameTypes.map { it!![1] }.average()
+            return doubleArrayOf(homeMatchPoints, awayMatchPoints)
+        }
+
+        private fun getMatchPoints(homeRoundsWon: Int, awayRoundsWon: Int): IntArray {
+            val koth = homeRoundsWon.coerceAtLeast(awayRoundsWon) == 4
             var homeMatchPoints = 0
             var awayMatchPoints = 0
             if (!koth) {
-                homeMatchPoints = Math.round(homeRoundsWon.toDouble() / (homeRoundsWon + awayRoundsWon) * 9).toInt()
+                homeMatchPoints = (homeRoundsWon.toDouble() / (homeRoundsWon + awayRoundsWon) * 9).roundToInt()
                 awayMatchPoints = 9 - homeMatchPoints
             } else {
                 if (homeRoundsWon > awayRoundsWon) {
@@ -111,13 +141,7 @@ class Match {
             }
             return intArrayOf(homeMatchPoints, awayMatchPoints)
         }
-
-        fun getInqMatchPoints(homeRoundsWon: Int, awayRoundsWon: Int): DoubleArray {
-            val homeMatchPoints = homeRoundsWon.toDouble() * 9 / (homeRoundsWon + awayRoundsWon)
-            val awayMatchPoints = awayRoundsWon.toDouble() * 9 / (homeRoundsWon + awayRoundsWon)
-            return doubleArrayOf(homeMatchPoints, awayMatchPoints)
-        }
     }
 }
 
-data class MatchResult(val won: Boolean, val roundsWon: Int, val roundsLost: Int, val matchPoints: Int, val inqMatchPoints: Double)
+data class MatchResult(val won: Boolean, val roundsWon: Int, val roundsLost: Int, val matchPoints: Int)

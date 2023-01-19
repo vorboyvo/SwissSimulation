@@ -16,17 +16,17 @@
  */
 package com.vibeisveryo.tournamentsim
 
-import com.vibeisveryo.tournamentsim.benchmarking.Benchmark
-import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSwissMatches
-import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss
-import com.vibeisveryo.tournamentsim.tournament.Division
-import java.io.IOException
+import com.vibeisveryo.tournamentsim.simulation.Division
+import com.vibeisveryo.tournamentsim.tournament.Swiss
 
 object SimpleMain {
-    @Throws(IOException::class)
     @JvmStatic
     fun main(vararg args: String) {
-        MeasureSwiss.measureCombinedDistortionsTwoMatches(1,10,36,1000,Division.SkillStyle.UNIFORM)
-        MeasureSwiss.measureCombinedDistortions(1,10,36,1000,Division.SkillStyle.UNIFORM)
+        val main = Division("Main", 12, Division.SkillStyle.UNIFORM)
+        Swiss.swissRunMatches(main, 7)
+        val expectedMatchPoints = main.teamExpectedMatchPoints(7).toSortedMap(Comparator.reverseOrder())
+        for ((key, value) in expectedMatchPoints) {
+            println("$key $value")
+        }
     }
 }

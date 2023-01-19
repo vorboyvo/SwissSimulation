@@ -16,8 +16,9 @@
  */
 package com.vibeisveryo.tournamentsim.measurement
 
-import com.vibeisveryo.tournamentsim.tournament.Division
-import com.vibeisveryo.tournamentsim.tournament.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.simulation.Division
+import com.vibeisveryo.tournamentsim.simulation.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.tournament.Swiss
 import com.vibeisveryo.tournamentsim.util.OutWriter
 import java.io.IOException
 import java.time.Duration
@@ -44,8 +45,8 @@ object MeasureRandomThenSwiss {
                     val randMatchCount = ceil(matchCount * propRandom).toInt()
                     val swissMatchCount = matchCount - randMatchCount
                     val main = Division("Main", teamCount, skillStyle!!)
-                    main.randomRunMatches(randMatchCount)
-                    main.swissRunMatches(swissMatchCount)
+                    Swiss.randomRunMatches(main, randMatchCount)
+                    Swiss.swissRunMatches(main, swissMatchCount)
                     val distortions = Distortions.getDistortions(main)
                     outWriter.addRecord(
                         matchCount,

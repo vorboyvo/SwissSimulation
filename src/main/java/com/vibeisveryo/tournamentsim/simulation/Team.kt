@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License along with TournamentSimulation. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package com.vibeisveryo.tournamentsim.tournament
+package com.vibeisveryo.tournamentsim.simulation
 
 class Team(val name: String, val skill: Double) : Comparable<Team> {
     var isBye = false
@@ -23,7 +23,7 @@ class Team(val name: String, val skill: Double) : Comparable<Team> {
     var roundsWon = 0
     var roundsLost = 0
     var matchPoints = 0
-    val teamsFaced: HashSet<Team> = HashSet()
+    private val teamsFaced: HashSet<Team> = HashSet()
 
     constructor(bye: Boolean) : this("Bye Week", -999999.0) {
         if (!bye) throw UnsupportedOperationException("Cannot use this constructor except for bye!")
@@ -88,5 +88,9 @@ class Team(val name: String, val skill: Double) : Comparable<Team> {
 
     fun addTeamFaced(team: Team) {
         this.teamsFaced.add(team)
+    }
+
+    fun hasFaced(team: Team): Boolean {
+        return team in this.teamsFaced
     }
 }

@@ -16,7 +16,7 @@
  */
 package com.vibeisveryo.tournamentsim.measurement
 
-import com.vibeisveryo.tournamentsim.tournament.Division
+import com.vibeisveryo.tournamentsim.simulation.Division
 import java.util.stream.IntStream
 import kotlin.math.abs
 import kotlin.math.roundToInt

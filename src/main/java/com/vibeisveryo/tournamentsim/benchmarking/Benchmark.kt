@@ -17,7 +17,8 @@
 package com.vibeisveryo.tournamentsim.benchmarking
 
 import com.vibeisveryo.tournamentsim.Main
-import com.vibeisveryo.tournamentsim.tournament.Division
+import com.vibeisveryo.tournamentsim.simulation.Division
+import com.vibeisveryo.tournamentsim.tournament.Swiss
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -34,7 +35,7 @@ object Benchmark {
             val matchCount = ceil(teamCount / 2.0).toInt() * 2 - 3
             for (i in 0 until iters) {
                 val divMain = Division("Main", teamCount, Main.SKILL_STYLE)
-                divMain.swissRunMatches(matchCount)
+                Swiss.swissRunMatches(divMain, matchCount)
             }
             val end = Instant.now()
             System.out.printf(
@@ -52,7 +53,7 @@ object Benchmark {
             val matchCount = ceil(teamCount / 2.0).toInt() * 2 - 3
             for (i in 0 until iters) {
                 val divMain = Division("Main", teamCount, Main.SKILL_STYLE)
-                divMain.randomRunMatches(matchCount)
+                Swiss.randomRunMatches(divMain, matchCount)
             }
             val end = Instant.now()
             System.out.printf(
@@ -69,7 +70,7 @@ object Benchmark {
         for (i in 0 until iters) {
             val start = Instant.now()
             val main = Division("Main", teamCount, Main.SKILL_STYLE)
-            main.swissRunMatches(matchCount)
+            Swiss.swissRunMatches(main, matchCount)
             val stop = Instant.now()
             durations[i] = Duration.between(start, stop).toMillis().toInt()
         }
@@ -89,7 +90,7 @@ object Benchmark {
         vari /= iters.toDouble()
         val stdev: Double = sqrt(vari)
         Arrays.sort(durations)
-        var median: Double = if (iters % 2 == 0) {
+        val median: Double = if (iters % 2 == 0) {
             (durations[iters / 2 - 1] + durations[iters / 2]) / 2.0
         } else {
             durations[iters / 2].toDouble()

@@ -20,7 +20,7 @@ import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSeason
 import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSwissMatches
 import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureCombinedDistortions
 import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureDistortionsOverMatches
-import com.vibeisveryo.tournamentsim.tournament.Division.SkillStyle
+import com.vibeisveryo.tournamentsim.simulation.Division.SkillStyle
 import java.util.*
 import kotlin.math.ceil
 import kotlin.system.exitProcess
