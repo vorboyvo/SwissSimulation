@@ -27,12 +27,14 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
+import kotlin.math.pow
 
 object MeasureRandomThenSwiss {
+    @JvmStatic
     @Throws(IOException::class)
     fun measureCombinedDistortions(
         matchesStart: Int, teamsStart: Int, teamsStop: Int,
-        iterations: Int, skillStyle: SkillStyle?, propRandom: Double
+        iterations: Int, skillStyle: SkillStyle, propRandom: Double
     ) {
         val outWriter = OutWriter("distortions_randswiss_combined", "matches", "teams", "distortions")
 
@@ -40,26 +42,24 @@ object MeasureRandomThenSwiss {
         for (i in 0 until iterations) {
             val startTime = Instant.now()
             for (teamCount in teamsStart..teamsStop) {
-                var matchCount = matchesStart
-                while (matchCount < ceil(teamCount / 2.0) * 2 - 2) {
+                for (matchCount in matchesStart..(ceil(teamCount / 2.0) * 2 - 3).toInt()) {
                     val randMatchCount = ceil(matchCount * propRandom).toInt()
                     val swissMatchCount = matchCount - randMatchCount
-                    val main = Division("Main", teamCount, skillStyle!!)
+                    val main = Division("Main", teamCount, skillStyle)
                     Swiss.randomRunMatches(main, randMatchCount)
                     Swiss.swissRunMatches(main, swissMatchCount)
                     val distortions = Distortions.getDistortions(main, matchCount)
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, matchCount))
                     )
-                    matchCount++
                 }
             }
             outWriter.print()
             val endTime = Instant.now()
             val time = Duration.between(startTime, endTime).toNanos()
-            if (i % Math.pow(10.0, floor(log10((iterations - 1).toDouble()))) == 0.0
+            if (i % 10.0.pow(floor(log10((iterations - 1).toDouble()))) == 0.0
                 || time > TimeUnit.SECONDS.toNanos(1L)
             ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
         }

@@ -203,6 +203,7 @@ object Swiss {
             }
             var removed: Team
             do {
+                if (schedule.isEmpty()) return null
                 removed = schedule.removeLast()
             } while (removed !== lastScheduled)
             // No path found

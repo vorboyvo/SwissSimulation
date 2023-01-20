@@ -31,28 +31,27 @@ import kotlin.math.log10
 import kotlin.math.pow
 
 object MeasureRandom {
+    @JvmStatic
     @Throws(IOException::class)
     fun measureCombinedDistortions(
         matchesStart: Int, teamsStart: Int, teamsStop: Int,
-        iterations: Int, skillStyle: SkillStyle?
+        iterations: Int, skillStyle: SkillStyle
     ) {
         val outWriter = OutWriter("distortions_random_combined", "matches", "teams", "distortions")
 
         // Do the iters
         for (i in 0 until iterations) {
             val startTime = Instant.now()
-            for (teamCount in teamsStart until teamsStop) {
-                var matchCount = matchesStart
-                while (matchCount < ceil(teamCount / 2.0) * 2 - 2) {
-                    val main = Division("Main", teamCount, skillStyle!!)
+            for (teamCount in teamsStart .. teamsStop) {
+                for (matchCount in matchesStart .. (ceil(teamCount / 2.0) * 2 - 3).toInt()) {
+                    val main = Division("Main", teamCount, skillStyle)
                     Swiss.randomRunMatches(main, matchCount)
                     val distortions = Distortions.getDistortions(main, matchCount)
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, matchCount))
                     )
-                    matchCount++
                 }
             }
             outWriter.print()
@@ -77,7 +76,7 @@ object MeasureRandom {
                 Swiss.randomRunMatches(main, 1)
                 // Get team skill rank
                 val teamSkillRanks = main.teamSkillRanks()
-                for (j in 0 until teamCount) {
+                for (j in 0 .. teamCount) {
                     outWriter.addRecord(week, teamSkillRanks[j], j, teamCount)
                 }
             }

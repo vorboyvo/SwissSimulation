@@ -19,7 +19,6 @@ package com.vibeisveryo.tournamentsim
 import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSeason
 import com.vibeisveryo.tournamentsim.benchmarking.Benchmark.benchSwissMatches
 import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureCombinedDistortions
-import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss.measureDistortionsOverMatches
 import com.vibeisveryo.tournamentsim.simulation.Division.SkillStyle
 import java.util.*
 import kotlin.math.ceil
@@ -56,15 +55,6 @@ object Main {
         }
         when (args[0].lowercase(Locale.getDefault())) {
             "help" -> helpCommand()
-            "distmatches" -> {
-                if (args.size == 5) measureDistortionsOverMatches(
-                    args[1].toInt(),
-                    args[2].toInt(),
-                    args[3].toInt(),
-                    args[4].toInt(),
-                    SKILL_STYLE
-                ) else helpCommand()
-            }
             "distcombined" -> {
                 if (args.size == 5) measureCombinedDistortions(
                     args[1].toInt(),

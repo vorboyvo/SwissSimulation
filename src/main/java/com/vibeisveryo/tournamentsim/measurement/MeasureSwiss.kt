@@ -51,7 +51,7 @@ object MeasureSwiss {
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, matchCount))
                     )
                 }
             }
@@ -86,7 +86,7 @@ object MeasureSwiss {
                     outWriter.addRecord(
                         weekCount*2,
                         teamCount,
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, weekCount*2))
                     )
                 }
             }
@@ -127,7 +127,7 @@ object MeasureSwiss {
                         teamCount,
                         String.format("%3.5f", Distortions.sumFractionalDistortions(distortions, 1 / 2.0)),
                         String.format("%3.5f", Distortions.sumFractionalDistortions(distortions, 1 / 3.0)),
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeam(distortions))
+                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, matchCount))
                     )
                     matchCount++
                 }
