@@ -34,7 +34,7 @@ class Division {
     private val name: String
     private val teamList // Should always be sorted by any action modifying the team list!
             : MutableList<Team>
-    var verbosityLevel // TODO add functionality
+    var verbosityLevel
             : VerbosityLevel
     private val random: Random
 
@@ -196,12 +196,12 @@ class Division {
                 }
             }
         }
-        teamList.shuffle(random)
 
-        // Add bye week for odd number of teams, after shuffling, so it's at the end
-        // (It doesn't really make a huge difference, but it's the principle of it)
+        // Add bye week for odd number of teams, after shuffling
         if (teamList.size % 2 == 1) {
             teamList.add(Team(true))
         }
+
+        this.shuffle()
     }
 }

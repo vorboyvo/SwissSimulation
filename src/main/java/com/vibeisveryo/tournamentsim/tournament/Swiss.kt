@@ -96,7 +96,7 @@ object Swiss {
         // Make list of matches
         val matches: MutableList<Array<Array<Team>>> = ArrayList()
         // Play the week's matches and make necessary adjustments for each week
-        for (weekNo in 0 until matchCount) {
+        for (weekNo in  1..matchCount) {
 
             div.shuffle()
 

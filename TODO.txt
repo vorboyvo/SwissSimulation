@@ -4,6 +4,5 @@ Double Elimination
 - Set up DE structure for tournament
 - Figure out how to rank teams based on when they were eliminated
 
-Robustness
-- Create new measure for distortions as Ex. MP vs Act. MP
-- Remeasure everything
+Team Deaths
+- Figure out how to simulate team deaths
