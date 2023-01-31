@@ -16,7 +16,6 @@
  */
 package com.vibeisveryo.tournamentsim.benchmarking
 
-import com.vibeisveryo.tournamentsim.Main
 import com.vibeisveryo.tournamentsim.simulation.Division
 import com.vibeisveryo.tournamentsim.tournament.Swiss
 import java.time.Duration
@@ -27,6 +26,8 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 object Benchmark {
+    val skillStyle = Division.SkillStyle.TRUE_RANDOM
+
     @JvmStatic
     fun benchSwissMatches(iters: Int, maxTeams: Int) {
         var teamCount = 10
@@ -34,7 +35,7 @@ object Benchmark {
             val start = Instant.now()
             val matchCount = ceil(teamCount / 2.0).toInt() * 2 - 3
             for (i in 0 until iters) {
-                val divMain = Division("Main", teamCount, Main.SKILL_STYLE)
+                val divMain = Division("Main", teamCount, skillStyle)
                 Swiss.swissRunMatches(divMain, matchCount)
             }
             val end = Instant.now()
@@ -52,7 +53,7 @@ object Benchmark {
             val start = Instant.now()
             val matchCount = ceil(teamCount / 2.0).toInt() * 2 - 3
             for (i in 0 until iters) {
-                val divMain = Division("Main", teamCount, Main.SKILL_STYLE)
+                val divMain = Division("Main", teamCount, skillStyle)
                 Swiss.randomRunMatches(divMain, matchCount)
             }
             val end = Instant.now()
@@ -69,7 +70,7 @@ object Benchmark {
         val durations = IntArray(iters)
         for (i in 0 until iters) {
             val start = Instant.now()
-            val main = Division("Main", teamCount, Main.SKILL_STYLE)
+            val main = Division("Main", teamCount, skillStyle)
             Swiss.swissRunMatches(main, matchCount)
             val stop = Instant.now()
             durations[i] = Duration.between(start, stop).toMillis().toInt()

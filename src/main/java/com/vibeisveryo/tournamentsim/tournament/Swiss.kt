@@ -39,7 +39,6 @@ object Swiss {
 
             // Sort team list
             div.sort()
-
             if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) {
                 println(div)
             }
@@ -95,10 +94,10 @@ object Swiss {
     @JvmStatic fun randomRunMatches(div: Division, matchCount: Int): List<Array<Array<Team>>> {
         // Make list of matches
         val matches: MutableList<Array<Array<Team>>> = ArrayList()
+        // Shuffle for week 1
+        div.shuffle()
         // Play the week's matches and make necessary adjustments for each week
-        for (weekNo in 0 until matchCount) {
-
-            div.shuffle()
+        for (weekNo in 1..matchCount) {
 
             // Schedule matches by Swiss
             if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) {
@@ -121,8 +120,8 @@ object Swiss {
                 div.addMatchPlayed(pairing[0], pairing[1])
             }
 
-            // Sort team list
-            div.sort()
+            // Shuffle team list
+            div.shuffle()
             if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) {
                 println(this)
             }

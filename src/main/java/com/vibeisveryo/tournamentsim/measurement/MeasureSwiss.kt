@@ -25,10 +25,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.log10
-import kotlin.math.pow
+import kotlin.math.*
 
 object MeasureSwiss {
 
@@ -43,7 +40,7 @@ object MeasureSwiss {
         // Do the iters
         for (i in 0 until iterations) {
             val startTime = Instant.now()
-            for (teamCount in teamsStart .. teamsStop) {
+            for (teamCount in teamsStart..teamsStop) {
                 for (matchCount in matchesStart .. (ceil(teamCount / 2.0) * 2 - 3).toInt()) {
                     val main = Division("Main", teamCount, skillStyle)
                     Swiss.swissRunMatches(main, matchCount)
@@ -51,7 +48,7 @@ object MeasureSwiss {
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, matchCount))
+                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions))
                     )
                 }
             }
@@ -86,7 +83,7 @@ object MeasureSwiss {
                     outWriter.addRecord(
                         weekCount*2,
                         teamCount,
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, weekCount*2))
+                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions))
                     )
                 }
             }
@@ -125,9 +122,9 @@ object MeasureSwiss {
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.sumFractionalDistortions(distortions, 1 / 2.0)),
-                        String.format("%3.5f", Distortions.sumFractionalDistortions(distortions, 1 / 3.0)),
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, matchCount))
+                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions.subList(0, (distortions.size/2.0).roundToInt()))),
+                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions.subList(0, (distortions.size/3.0).roundToInt()))),
+                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions))
                     )
                     matchCount++
                 }
