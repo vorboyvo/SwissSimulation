@@ -5,5 +5,5 @@ Double Elimination
 - Figure out how to rank teams based on when they were eliminated
 
 Robustness
-- Create new measure for distortions as Ex. MP vs Act. MP
-- Remeasure everything
+- Normalize measures of MP before calculating
+- Use Euclidean distance
