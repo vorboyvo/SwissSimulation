@@ -25,10 +25,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.log10
-import kotlin.math.pow
+import kotlin.math.*
 
 object MeasureSwiss {
 
@@ -157,6 +154,29 @@ object MeasureSwiss {
                 val teamSkillRanks = main.teamSkillRanks()
                 for (j in 0 until teamCount) {
                     outWriter.addRecord(week, teamSkillRanks[j], j)
+                }
+            }
+            outWriter.print()
+            val endTime = Instant.now()
+            val time = Duration.between(startTime, endTime).toNanos()
+            if (i % 10.0.pow(floor(log10((iterations - 1).toDouble()))) == 0.0
+                || time > TimeUnit.SECONDS.toNanos(1L)
+            ) System.out.printf("Iteration %d took %4.5f seconds\n", i, time / 1000000000.0)
+        }
+        outWriter.close()
+    }
+
+    fun getSkillDiffs(iterations: Int, teamsStart: Int, teamsStop: Int) {
+        val outWriter = OutWriter("skill_diffs_swiss", "teams", "week", "averageDiff")
+        for (i in 0 until iterations) {
+            val startTime = Instant.now()
+            for (teamCount in teamsStart..teamsStop) {
+                val main = Division("Main", teamCount, SkillStyle.UNIFORM)
+                val matchCount = (ceil(teamCount / 2.0) * 2 - 3).roundToInt()
+                for (week in 0 until matchCount) {
+                    val matches = Swiss.swissRunMatches(main, 1)[0]
+                    val diffs = matches.sumOf { abs((it[0].skill - it[1].skill).coerceAtMost(6.0)) } / teamCount
+                    outWriter.addRecord(teamCount, week, diffs)
                 }
             }
             outWriter.print()
