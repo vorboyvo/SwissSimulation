@@ -25,3 +25,7 @@ def saveGraphs(dfs):
         dfs[i].plot.scatter(x='matches', y='distortions')
         plt.title(f"{i} teams, means of distortions by # of matches")
         plt.savefig(rf'Work/graph_distortions_{i}teams.png')
+
+dfs[3].plot.scatter(x='matches', y='distortions')
+plt.title(f"{i} teams, means of distortions by # of matches")
+plt.show()

@@ -50,7 +50,7 @@ object MeasureRandom {
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.sumDistortionsPerTeamAndMatch(distortions, matchCount))
+                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions))
                     )
                 }
             }

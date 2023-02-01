@@ -17,34 +17,31 @@
 package com.vibeisveryo.tournamentsim.measurement
 
 import com.vibeisveryo.tournamentsim.simulation.Division
-import java.util.stream.IntStream
-import kotlin.math.abs
-import kotlin.math.roundToInt
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 object Distortions {
     /**
      * Gets distortions per team in a single simulated division.
-     *
-     * @return the absolute value of the sum of all distortions, divided by the number of teams.
+     * Distortions are normalized on the number of teams and the number of matches.
+     * @return the absolute value of the sum of all distortions, divided by the number of teams and matches.
      */
     fun getDistortions(division: Division, matchCount: Int): List<Double> {
         // Return abs value of distortions
         val expectedMatchPoints = division.teamExpectedMatchPoints(matchCount)
         return division.getTeamList().map {
-            it.matchPoints - expectedMatchPoints[it]!!
+            ((it.matchPoints / (division.getTeamList().size * matchCount).toDouble())
+                - (expectedMatchPoints[it]!! / (division.getTeamList().size * matchCount).toDouble()))
         }
     }
 
-    fun sumDistortionsPerTeamAndMatch(distortions: List<Double>, matchCount: Int): Double {
-        return distortions.stream().mapToDouble { k: Double -> abs(k) / (distortions.size.toDouble() * matchCount) }.sum()
-    }
-
-    fun sumFractionalDistortions(distortions: List<Double>, fraction: Double): Double {
-        val teamsMeasured = (distortions.size / fraction).roundToInt()
-        return distortions.subList(0, teamsMeasured).stream().mapToDouble { l: Double ->
-            abs(
-                l
-            ) / teamsMeasured.toDouble()
-        }.sum()
+    /**
+     * Gets euclidean distance between vectors of expected and actual match points, as a measure of total division
+     * deviation.
+     */
+    fun distortionsEuclideanDistance(distortions: List<Double>): Double {
+        return sqrt(distortions.stream().mapToDouble {
+            it.pow(2)
+        }.sum())
     }
 }

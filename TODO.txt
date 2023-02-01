@@ -4,5 +4,6 @@ Double Elimination
 - Set up DE structure for tournament
 - Figure out how to rank teams based on when they were eliminated
 
-Team Deaths
-- Figure out how to simulate team deaths
+Robustness
+- Normalize measures of MP before calculating
+- Use Euclidean distance

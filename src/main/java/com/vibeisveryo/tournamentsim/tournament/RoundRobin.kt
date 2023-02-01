@@ -40,15 +40,20 @@ object RoundRobin {
 
         // Run matches
         for ((i, week) in weekList.withIndex()) {
-            // StringBuilder printed = new StringBuilder();
-            // printed.append("Week ").append(i).append(": ").append(week);
+            val printed: StringBuilder = StringBuilder();
+            if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) {
+                printed.append("Week ").append(i+1).append(": ").append(week.map {
+                    val chosen = i % 2
+                    "[${it[chosen].name}, ${it[1-chosen].name}]"
+                });
+            }
             val koth = i % 2 != 0
             for (pairing in week) {
                 div.runMatch(pairing[0], pairing[1], koth)
                 // printed.append(" ").append(match);
                 div.addMatchPlayed(pairing[0], pairing[1])
             }
-            // System.out.println(printed);
+            if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) println(printed)
         }
 
         // Sort team list
