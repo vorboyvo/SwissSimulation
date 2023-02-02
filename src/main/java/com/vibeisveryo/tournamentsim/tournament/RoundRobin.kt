@@ -55,12 +55,12 @@ object RoundRobin {
 
         // Run matches
         for ((i, week) in weekList.withIndex()) {
-            val printed: StringBuilder = StringBuilder();
+            val printed: StringBuilder = StringBuilder()
             if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) {
                 printed.append("Week ").append(i+1).append(": ").append(week.map {
                     val chosen = i % 2
                     "[${it[chosen].name}, ${it[1-chosen].name}]"
-                });
+                })
             }
             val koth = i % 2 != 0
             for (pairing in week) {

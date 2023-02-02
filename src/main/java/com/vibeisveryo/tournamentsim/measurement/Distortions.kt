@@ -17,6 +17,7 @@
 package com.vibeisveryo.tournamentsim.measurement
 
 import com.vibeisveryo.tournamentsim.simulation.Division
+import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -24,7 +25,10 @@ object Distortions {
     /**
      * Gets distortions per team in a single simulated division.
      * Distortions are normalized on the number of teams and the number of matches.
-     * @return the absolute value of the sum of all distortions, divided by the number of teams and matches.
+     * @param division The division to get distortions for
+     * @param matchCount The number of matches to normalize over
+     * @return a list with entries, indexed corresponding to teams in the division at call time, the distance between
+     * their expected and actual match points, divided by the number of teams and matches.
      */
     fun getDistortions(division: Division, matchCount: Int): List<Double> {
         // Return abs value of distortions
@@ -36,12 +40,12 @@ object Distortions {
     }
 
     /**
-     * Gets euclidean distance between vectors of expected and actual match points, as a measure of total division
+     * Gets taxicab distance between vectors of expected and actual match points, as a measure of total division
      * deviation.
      */
-    fun distortionsEuclideanDistance(distortions: List<Double>): Double {
-        return sqrt(distortions.stream().mapToDouble {
-            it.pow(2)
-        }.sum())
+    fun taxicabDistortions(distortions: List<Double>): Double {
+        return distortions.stream().mapToDouble {
+            abs(it)
+        }.sum()
     }
 }

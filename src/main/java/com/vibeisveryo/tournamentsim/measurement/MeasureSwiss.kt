@@ -48,7 +48,7 @@ object MeasureSwiss {
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions))
+                        String.format("%3.5f", Distortions.taxicabDistortions(distortions))
                     )
                 }
             }
@@ -83,7 +83,7 @@ object MeasureSwiss {
                     outWriter.addRecord(
                         weekCount*2,
                         teamCount,
-                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions))
+                        String.format("%3.5f", Distortions.taxicabDistortions(distortions))
                     )
                 }
             }
@@ -122,9 +122,9 @@ object MeasureSwiss {
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions.subList(0, (distortions.size/2.0).roundToInt()))),
-                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions.subList(0, (distortions.size/3.0).roundToInt()))),
-                        String.format("%3.5f", Distortions.distortionsEuclideanDistance(distortions))
+                        String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(0, (distortions.size/2.0).roundToInt()))),
+                        String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(0, (distortions.size/3.0).roundToInt()))),
+                        String.format("%3.5f", Distortions.taxicabDistortions(distortions))
                     )
                     matchCount++
                 }
