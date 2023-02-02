@@ -16,9 +16,12 @@
  */
 package com.vibeisveryo.tournamentsim
 
+import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss
+import com.vibeisveryo.tournamentsim.simulation.Division
+
 object Main {
     @JvmStatic
     fun main(vararg args: String) {
-
+        MeasureSwiss.measureCombinedDistortions(1,10,32,5000,Division.SkillStyle.TRUE_RANDOM)
     }
 }
