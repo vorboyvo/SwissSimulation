@@ -25,8 +25,7 @@ import kotlin.math.roundToInt
 object RoundRobin {
 
     /**
-     * Run RR matches for this div. No parameters, the # of matches is fixed to
-     * div size - 1.
+     * Run RR matches for this div. No parameters, the # of matches is fixed to div size - 1.
      */
     @JvmStatic fun rrRunMatches(div: Division) {
         val weekList: MutableList<List<Array<Team>>> = ArrayList()
@@ -66,7 +65,6 @@ object RoundRobin {
             val koth = i % 2 != 0
             for (pairing in week) {
                 div.runMatch(pairing[0], pairing[1], koth)
-                // printed.append(" ").append(match);
                 div.addMatchPlayed(pairing[0], pairing[1])
             }
             if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) println(printed)
