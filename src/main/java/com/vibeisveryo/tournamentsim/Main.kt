@@ -16,12 +16,39 @@
  */
 package com.vibeisveryo.tournamentsim
 
+import com.vibeisveryo.tournamentsim.measurement.Distortions
 import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss
 import com.vibeisveryo.tournamentsim.simulation.Division
+import com.vibeisveryo.tournamentsim.tournament.Swiss
+import java.time.Duration
+import java.time.Instant
+import java.util.concurrent.TimeUnit
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.pow
 
 object Main {
     @JvmStatic
     fun main(vararg args: String) {
-        MeasureSwiss.measureCombinedDistortions(1,10,32,5000,Division.SkillStyle.TRUE_RANDOM)
+        val timeTaken = Array(500) { Array(33) { 0.0 } }
+        for (i in 0 until 500) {
+            val main = Division("Main", 36, Division.SkillStyle.TRUE_RANDOM)
+            for (j in 0 until 33) {
+                val startTime = Instant.now()
+                Swiss.swissRunMatches(main, 1)
+                val endTime = Instant.now()
+                val time = Duration.between(startTime, endTime).toNanos()
+                timeTaken[i][j] = (time / 1000000000.0)
+            }
+        }
+        println(timeTaken.map {
+            it.joinToString {  }
+            val builder = StringBuilder()
+            for (i in it) {
+                builder.append("${"%3.4f".format(i)},")
+            }
+            builder.append('\n')
+        })
     }
 }
