@@ -24,10 +24,11 @@ import java.io.IOException
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-class OutWriter(title: String, vararg headerValues: Any?) {
-    var outputWriter: FileWriter?
-    private var csvPrinter: CSVPrinter?
+class OutWriter(title: String, vararg headerValues: String) {
+    var outputWriter: FileWriter
+    private var csvPrinter: CSVPrinter
     private var unsaved: MutableList<Any?>
+    private var open: Boolean
 
     init {
         // Create output file
@@ -43,29 +44,33 @@ class OutWriter(title: String, vararg headerValues: Any?) {
         // Create output writer
         outputWriter = FileWriter(outputFile)
         csvPrinter = CSVPrinter(outputWriter, CSVFormat.DEFAULT)
-        csvPrinter!!.printRecord(*headerValues)
+        csvPrinter.printRecord(*headerValues)
         unsaved = ArrayList()
+        open = true
     }
 
     fun addRecord(vararg values: Any?) {
+        if (!open) throw IllegalArgumentException("Cannot add record to closed OutWriter!")
         unsaved.add(values)
     }
 
     @Throws(IOException::class)
     fun print() {
-        csvPrinter!!.printRecords(unsaved)
+        if (!open) throw IllegalArgumentException("Cannot print from closed OutWriter!")
+        csvPrinter.printRecords(unsaved)
         unsaved = ArrayList()
     }
 
     @Throws(IOException::class)
     fun print(vararg values: Any?) {
-        csvPrinter!!.printRecord(*values)
+        if (!open) throw IllegalArgumentException("Cannot print to closed OutWriter!")
+        csvPrinter.printRecord(*values)
     }
 
     @Throws(IOException::class)
     fun close() {
-        outputWriter!!.close()
-        outputWriter = null
-        csvPrinter = null
+        if (!open) throw IllegalArgumentException("Cannot close already closed OutWriter!")
+        outputWriter.close()
+        open = false
     }
 }

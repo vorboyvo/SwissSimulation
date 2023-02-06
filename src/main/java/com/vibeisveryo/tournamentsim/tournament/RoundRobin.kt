@@ -30,7 +30,7 @@ object RoundRobin {
     @JvmStatic fun rrRunMatches(div: Division) {
         val weekList: MutableList<List<Array<Team>>> = ArrayList()
 
-        val teamList = div.getTeamList()
+        val teamList = div.teamArray().toList()
         // Generate matchups
         // Circle method for generating matchups
         // https://en.wikipedia.org/wiki/Round-robin_tournament#Circle_method
@@ -62,7 +62,7 @@ object RoundRobin {
                     "[${it[chosen].name}, ${it[1-chosen].name}]"
                 })
             }
-            val koth = i % 2 != 0
+            val koth = i % 2 != 0 // Treat even numbered weeks as KoTH.
             for (pairing in week) {
                 div.runMatch(pairing[0], pairing[1], koth)
                 div.addMatchPlayed(pairing[0], pairing[1])

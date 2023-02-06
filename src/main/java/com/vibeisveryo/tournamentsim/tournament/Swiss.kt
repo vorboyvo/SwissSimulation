@@ -25,29 +25,34 @@ object Swiss {
 
     /**
      * Runs matches for a Swiss season.
+     * @param div The division to run Swiss matches on
      * @param matchCount Number of matches to be played
+     * @return a list of weeks, as arrays of 2-tuple arrays of teams which represent individual matchups
      */
     @JvmStatic fun swissRunMatches(div: Division, matchCount: Int): List<Array<Array<Team>>> {
         // Make list of matches
         val matches: MutableList<Array<Array<Team>>> = ArrayList()
         // Play the week's matches and make necessary adjustments for each week
         for (weekNo in 1..matchCount) {
-            // Schedule matches
+            // Print scheduling matches
             if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) {
                 println("==================================================")
                 println("Scheduling matches for week $weekNo")
                 println("==================================================")
             }
+
+            // Schedule matches and add them to our match list
             val schedule = scheduleWeek(div)
             matches.add(schedule.toTypedArray())
 
+            // Print schedule
             if (div.verbosityLevel >= Division.VerbosityLevel.DETAILED) {
                 println("Schedule: " + schedule.map {
                     "[${it[0].name}, ${it[1].name}]"
                 })
             }
 
-            // Run matches
+            // Play the matches
             for (pairing in schedule) {
                 div.runMatch(pairing[0], pairing[1], weekNo % 2 != 0)
                 div.addMatchPlayed(pairing[0], pairing[1])
@@ -62,6 +67,10 @@ object Swiss {
         return matches
     }
 
+    /**
+     * Runs matches for a Swiss season, running multiple matches at once without re-sorting. The use case is when, for
+     * example in RGL 6s, multiple matches are scheduled at once (i.e. in 6s, two matches a week).
+     */
     @JvmStatic fun swissRunTupleMatches(div: Division, weekCount: Int, matchesPerWeek: Int): List<Array<Array<Team>>> {
         // Make list of matches
         val matches: MutableList<Array<Array<Team>>> = ArrayList()
@@ -86,6 +95,7 @@ object Swiss {
                 for (pairing in round) {
                     div.addMatchPlayed(pairing[0], pairing[1])
                 }
+                // Do not sort in between match calls!
             }
 
             // Run matches
@@ -105,58 +115,63 @@ object Swiss {
     }
 
     /**
-     *
+     * Runs matches for a season, randomly rolling matches with no repeats.
+     * @param div The division to run random matches on
+     * @param matchCount Number of matches to be played
+     * @return a list of weeks, as arrays of 2-tuple arrays of teams which represent individual matchups
      */
     @JvmStatic fun randomRunMatches(div: Division, matchCount: Int): List<Array<Array<Team>>> {
         // Make list of matches
         val matches: MutableList<Array<Array<Team>>> = ArrayList()
-        // Shuffle for week 1
-        div.shuffle()
         // Play the week's matches and make necessary adjustments for each week
         for (weekNo in 1..matchCount) {
 
-            // Schedule matches by Swiss
+            // Shuffle because team list is sorted by contract, but we want random (with bye week still at bottom)
+            div.shuffle()
+
+            // Print scheduling matches
             if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) {
                 println("==================================================")
                 println("Scheduling matches for week $weekNo")
                 println("==================================================")
             }
+
+            // Schedule matches and add them to our match list
             val schedule = scheduleWeek(div)
             matches.add(schedule.toTypedArray())
 
+            // Print schedule
             if (div.verbosityLevel >= Division.VerbosityLevel.DETAILED) {
                 println("Schedule: " + schedule.map {
                     "[${it[0].name}, ${it[1].name}]"
                 })
             }
 
-            // Run matches
+            // Play the matches
             for (pairing in schedule) {
                 div.runMatch(pairing[0], pairing[1], weekNo % 2 != 0)
                 div.addMatchPlayed(pairing[0], pairing[1])
             }
 
-            // Shuffle team list
-            div.shuffle()
+            // Sort team list to obey contract
+            div.sort()
             if (div.verbosityLevel >= Division.VerbosityLevel.MINIMAL) {
-                println(this)
+                println(div)
             }
         }
         return matches
     }
 
     /**
-     * Run a single week's matches. Wraps a recursive method that uses DFS to find a working set of matches.
-     *
-     * @return List of pairs of TeamContext for that week's matches, where the pair's index 0 is home and 1 is away.
+     * Schedule a single week's matches, without playing . Wraps recursive DFS to find a working set of matches.
+     * @param div the Division to run a week's matches on
+     * @return List of pairs of Team for that week's matches, where the pair's index 0 is home and 1 is away.
      */
     @JvmStatic fun scheduleWeek(div: Division): List<Array<Team>> {
         // Assume team list is sorted. Otherwise, we have other issues going on.
-        val scheduleUnpacked = dfsFindSchedule(
-            LinkedList(), div.teamArray(),
-            true, 0, null
-        ) ?: throw NullPointerException("Could not find a valid set of matches!")
-        // Pack schedule into list of pairs
+        val scheduleUnpacked = dfsFindSchedule(LinkedList(), div.teamArray(),true, 0)
+            ?: throw NullPointerException("Could not find a valid set of matches!")
+        // Pack schedule into list of pairs (odd-even pairs)
         val schedule: MutableList<Array<Team>> = ArrayList(scheduleUnpacked.size / 2)
         val packer: Iterator<Team> = scheduleUnpacked.iterator()
         while (packer.hasNext()) {
@@ -176,44 +191,45 @@ object Swiss {
      * @return Full schedule, or null if none was found down this path
      */
     @JvmStatic private fun dfsFindSchedule(
-        schedule: Deque<Team>, remainingTeams: Array<Team>, home: Boolean,
-        depth: Int, scheduleFirst: Team?
-    ): Deque<Team>? {
-        var teamScheduleFirst = scheduleFirst
-        if (teamScheduleFirst == null) teamScheduleFirst = remainingTeams[0]
+        schedule: Deque<Team>, remainingTeams: Array<Team>, home: Boolean, depth: Int, scheduleFirst: Team = remainingTeams[0])
+    : Deque<Team>? {
 
         // Base case: Positive (reached [green] leaf) - should only happen when home false (i.e. scheduling away team)
         if (remainingTeams.size == 1) {
             if (home) throw RuntimeException("Odd number of teams!")
             // Append scheduled team to schedule and return
-            schedule.add(teamScheduleFirst)
+            schedule.add(scheduleFirst)
             return schedule
         }
-        // Recursive case 1: On away -> Add current Away team to schedule, recur on rest
+        // Recursive case 1:
+        // On away -> Add current Away team to schedule, recur on rest
+        // On home -> Add top team to schedule, then iterate through the rest of the teams looking for the first
+        //      working green path to a leaf
         return if (!home) {
             // Append scheduled team to schedule
-            schedule.add(teamScheduleFirst)
+            schedule.add(scheduleFirst)
             // Recur on remainingTeams without scheduled team
             val newRemainingTeams = arrayOfNulls<Team>(remainingTeams.size - 1)
             var j = 0
             //  Copy remainingTeams to newRemainingTeams excluding newly scheduled team
             for (temp in remainingTeams) {
-                if (temp !== teamScheduleFirst) {
+                if (temp !== scheduleFirst) {
                     newRemainingTeams[j] = temp
                     j++
                 }
             }
-            dfsFindSchedule(schedule, newRemainingTeams.requireNoNulls(), true, depth + 1, null)
+            dfsFindSchedule(schedule, newRemainingTeams.requireNoNulls(), true, depth + 1)
         } else {
             // Append home team to schedule
             val lastScheduled = schedule.peekLast()
-            schedule.add(teamScheduleFirst)
+            schedule.add(scheduleFirst)
+            // Slice remaining teams to pass to recursive function. Remember: the top team should be teamScheduleFirst!
             val newRemainingTeams = remainingTeams.slice(1 until remainingTeams.size).toTypedArray()
-            val homeTeam = remainingTeams[0]
             for (team in newRemainingTeams) {
-                if (homeTeam.hasFaced(team)) continue
+                if (scheduleFirst.hasFaced(team)) continue
                 // Recur on newRemainingTeams
-                val path = dfsFindSchedule(schedule, newRemainingTeams, false, depth + 1, team)
+                val path = dfsFindSchedule(schedule, newRemainingTeams, false, depth + 1,
+                    scheduleFirst = team)
                 if (path != null) return path
             }
             var removed: Team

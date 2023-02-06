@@ -52,7 +52,7 @@ object MeasureRandomThenSwiss {
                     outWriter.addRecord(
                         matchCount,
                         teamCount,
-                        String.format("%3.5f", Distortions.taxicabDistortions(distortions))
+                        String.format("%3.5f", Distortions.taxicabDistortions(distortions, teamCount, matchCount))
                     )
                 }
             }

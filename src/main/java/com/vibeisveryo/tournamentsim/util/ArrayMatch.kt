@@ -4,7 +4,7 @@ import kotlin.math.abs
 
 object ArrayMatch {
     /**
-     * Finds an element of an array with the minimum one-dimensional Euclidean distance from our given value
+     * Finds an element of an array with the minimum distance from our given value
      * @param value value to be found the closest match
      * @param array array to be searched within for the closest match
      * @return value of the closest match

@@ -18,34 +18,34 @@ package com.vibeisveryo.tournamentsim.measurement
 
 import com.vibeisveryo.tournamentsim.simulation.Division
 import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 object Distortions {
     /**
      * Gets distortions per team in a single simulated division.
-     * Distortions are normalized on the number of teams and the number of matches.
+     * Distortions are NOT NORMALIZED; the caller must take care to normalize them!
      * @param division The division to get distortions for
      * @param matchCount The number of matches to normalize over
      * @return a list with entries, indexed corresponding to teams in the division at call time, the distance between
-     * their expected and actual match points, divided by the number of teams and matches.
+     * their expected and actual match points
      */
     fun getDistortions(division: Division, matchCount: Int): List<Double> {
-        // Return abs value of distortions
-        val expectedMatchPoints = division.teamExpectedMatchPoints(matchCount)
-        return division.getTeamList().map {
-            ((it.matchPoints / (division.getTeamList().size * matchCount).toDouble())
-                - (expectedMatchPoints[it]!! / (division.getTeamList().size * matchCount).toDouble()))
+        val expectedMatchPoints = division.normalizedExpectedMatchPoints(matchCount)
+        return division.teamArray().map {
+            it.matchPoints - expectedMatchPoints[it]!!
         }
     }
 
     /**
      * Gets taxicab distance between vectors of expected and actual match points, as a measure of total division
-     * deviation.
+     * deviation, normalized in team and match count.
      */
-    fun taxicabDistortions(distortions: List<Double>): Double {
-        return distortions.stream().mapToDouble {
-            abs(it)
-        }.sum()
+    fun taxicabDistortions(distortions: List<Double>, teamCount: Int, matchCount: Int): Double {
+        return distortions.sumOf { abs(it) / (teamCount * matchCount) }
+    }
+
+    fun playoffsTaxicabDistortions(distortions: List<Double>, playoffsSize: (Int) -> Int): Double {
+        val teamCount = distortions.size
+        val playoffsCount = playoffsSize(teamCount)
+        return distortions.subList(0, playoffsCount).sumOf { abs(it) }
     }
 }

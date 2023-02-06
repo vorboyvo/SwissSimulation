@@ -17,38 +17,39 @@
 package com.vibeisveryo.tournamentsim
 
 import com.vibeisveryo.tournamentsim.measurement.Distortions
+import com.vibeisveryo.tournamentsim.measurement.MeasureIterative
 import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss
 import com.vibeisveryo.tournamentsim.simulation.Division
 import com.vibeisveryo.tournamentsim.tournament.Swiss
-import java.time.Duration
-import java.time.Instant
-import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.log10
-import kotlin.math.pow
 
 object Main {
     @JvmStatic
     fun main(vararg args: String) {
-        val timeTaken = Array(500) { Array(33) { 0.0 } }
-        for (i in 0 until 500) {
-            val main = Division("Main", 36, Division.SkillStyle.TRUE_RANDOM)
-            for (j in 0 until 33) {
-                val startTime = Instant.now()
-                Swiss.swissRunMatches(main, 1)
-                val endTime = Instant.now()
-                val time = Duration.between(startTime, endTime).toNanos()
-                timeTaken[i][j] = (time / 1000000000.0)
+        MeasureIterative.measureIterative(
+            1000, "distortions_indiv_32teams", "matches",
+            "teams", "distortions", "dist1", "dist2", "dist3", "dist4", "dist5", "dist6", "dist7", "dist8"
+        ) {
+            val teamCount = 32
+
+            for (matchCount in 1..(ceil(teamCount / 2.0) * 2 - 3).toInt()) {
+                val main = Division("Main", teamCount, Division.SkillStyle.TRUE_RANDOM)
+                Swiss.swissRunMatches(main, matchCount)
+                val distortions = Distortions.getDistortions(main, matchCount)
+                it.addRecord(
+                    matchCount,
+                    teamCount,
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions, teamCount, matchCount)),
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(0, 1), 1, matchCount)),
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(1, 2), 1, matchCount)),
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(2, 3), 1, matchCount)),
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(3, 4), 1, matchCount)),
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(4, 5), 1, matchCount)),
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(5, 6), 1, matchCount)),
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(6, 7), 1, matchCount)),
+                    String.format("%3.5f", Distortions.taxicabDistortions(distortions.subList(7, 8), 1, matchCount)),
+                )
             }
         }
-        println(timeTaken.map {
-            it.joinToString {  }
-            val builder = StringBuilder()
-            for (i in it) {
-                builder.append("${"%3.4f".format(i)},")
-            }
-            builder.append('\n')
-        })
     }
 }

@@ -16,12 +16,17 @@
  */
 package com.vibeisveryo.tournamentsim.simulation
 
+import com.vibeisveryo.tournamentsim.simulation.Match.match
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.math.ceil
 import kotlin.math.floor
 
+/**
+ * Represents a division, which is a group of teams within which matches occur.
+ * By contract, any method that modifies teams in this Division should also
+ */
 class Division {
     enum class VerbosityLevel(val value: Int) {
         NONE(0), MINIMAL(1), DETAILED(2), FULL(3);
@@ -32,7 +37,7 @@ class Division {
     }
 
     private val name: String
-    private val teamList // Should always be sorted by any action modifying the team list!
+    private val teamList
             : MutableList<Team>
     var verbosityLevel
             : VerbosityLevel
@@ -43,7 +48,7 @@ class Division {
         this.teamList = ArrayList()
         this.verbosityLevel = VerbosityLevel.NONE
         this.random = Random()
-        addTeams(noOfTeams, skillStyle)
+        generateTeams(noOfTeams, skillStyle)
     }
 
     constructor(name: String, noOfTeams: Int, skillStyle: SkillStyle, seed: Long) {
@@ -51,36 +56,28 @@ class Division {
         this.teamList = ArrayList()
         this.verbosityLevel = VerbosityLevel.NONE
         this.random = Random(seed)
-        addTeams(noOfTeams, skillStyle)
+        generateTeams(noOfTeams, skillStyle)
     }
 
     constructor(name: String, teamList: List<Team>) {
         this.name = name
-        this.teamList = ArrayList()
-        this.teamList.addAll(teamList)
+        this.teamList = ArrayList(teamList)
         this.verbosityLevel = VerbosityLevel.NONE
         this.random = Random()
     }
 
     constructor(name: String, teamList: List<Team>, seed: Long) {
         this.name = name
-        this.teamList = ArrayList()
-        this.teamList.addAll(teamList)
+        this.teamList = ArrayList(teamList)
         this.verbosityLevel = VerbosityLevel.NONE
         this.random = Random(seed)
     }
 
-    fun runMatch(homeTeam: Team, awayTeam: Team, koth: Boolean): Match {
-        val myMatch: Match = if (!homeTeam.isBye && !awayTeam.isBye) {
-            Match( homeTeam.skill, awayTeam.skill, koth, random)
-        } else if (homeTeam.isBye) {
-            Match(true)
-        } else {
-            Match(false)
-        }
-        homeTeam.addMatch(myMatch.homeResult)
-        awayTeam.addMatch(myMatch.awayResult)
-        return myMatch
+    fun runMatch(homeTeam: Team, awayTeam: Team, koth: Boolean) {
+        val (homeResult, awayResult) = match(homeTeam.skill, awayTeam.skill, koth, random,
+            homeBye = homeTeam.isBye, awayBye = awayTeam.isBye)
+        homeTeam.addMatch(homeResult)
+        awayTeam.addMatch(awayResult)
     }
 
     fun addMatchPlayed(vararg args: Team): Division {
@@ -92,7 +89,7 @@ class Division {
     }
 
     /**
-     * Sorts this Division's teamList by the natural ordering of the Teams within
+     * Sorts this Division's teamList by the natural ordering of the Teams within.
      */
     fun sort() {
         this.teamList.sortWith(Collections.reverseOrder())
@@ -111,8 +108,15 @@ class Division {
         if (byeRemoved) teamList.add(byeTeam)
     }
 
+    /**
+     * Returns an Array containing all the Teams in this division
+     */
     fun teamArray(): Array<Team> {
         return teamList.toTypedArray()
+    }
+
+    fun size(): Int {
+        return this.teamList.size
     }
 
     /**
@@ -136,13 +140,9 @@ class Division {
         return returned.toString()
     }
 
-    fun getTeamList(): List<Team> {
-        return teamList
-    }
-
     fun teamSkillRanks(): List<Int> {
-        return this.getTeamList().stream().map { team: Team? ->
-            val teams: MutableList<Team> = ArrayList(this.getTeamList())
+        return this.teamList.stream().map { team: Team? ->
+            val teams: MutableList<Team> = ArrayList(this.teamList)
             teams.sortWith(Collections.reverseOrder { o1: Team, o2: Team ->
                 val diff = o1.skill - o2.skill
                 (if (diff >= 0) ceil(diff) else floor(diff)).toInt()
@@ -151,7 +151,13 @@ class Division {
         }.toList()
     }
 
-    fun teamExpectedMatchPoints(): Map<Team, Double> {
+    /**
+     * Calculate expected match points.
+     * Expected match points is defined as match points in a round-robin with no randomness (i.e., teams win rounds in
+     * approximate proportion to their percent chance of winning).
+     * @return a map from each Team in this Division to their expected match points at call time
+     */
+    fun expectedMatchPoints(): Map<Team, Double> {
         val map: MutableMap<Team, Double> = HashMap()
         for (team in this.teamList) {
             var matchPoints = 0.0
@@ -164,11 +170,24 @@ class Division {
         return map
     }
 
-    fun teamExpectedMatchPoints(matchCount: Int): Map<Team, Double> {
-        return this.teamExpectedMatchPoints().mapValues { (it.value/(this.teamList.size-1))*matchCount }
+    /**
+     * Calculate expected match points, normalized over a number of matches.
+     * @return a map from each Team in this Division to their expected match points at call time (per a round-robin
+     * with no randomness), prorated by the number of matches actually taking place in the season, instead of a
+     * round-robin.
+     */
+    fun normalizedExpectedMatchPoints(matchCount: Int): Map<Team, Double> {
+        return this.expectedMatchPoints().mapValues {
+            (it.value/(this.teamList.size-1))*matchCount
+        }
     }
 
-    private fun addTeams(noOfTeams: Int, skillStyle: SkillStyle) {
+    /**
+     * Generates teams according to a given SkillStyle, then adds them to this division's team list
+     * @param noOfTeams Number of teams to be generated
+     * @param skillStyle SkillStyle method by which to generate them
+     */
+    private fun generateTeams(noOfTeams: Int, skillStyle: SkillStyle) {
         when (skillStyle) {
             SkillStyle.IDENTICAL -> {
                 for (i in 0 until noOfTeams) {
