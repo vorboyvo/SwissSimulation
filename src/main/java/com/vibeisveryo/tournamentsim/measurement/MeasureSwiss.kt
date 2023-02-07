@@ -20,13 +20,9 @@ import com.vibeisveryo.tournamentsim.measurement.MeasureIterative.measureIterati
 import com.vibeisveryo.tournamentsim.simulation.Division
 import com.vibeisveryo.tournamentsim.simulation.Division.SkillStyle
 import com.vibeisveryo.tournamentsim.tournament.Swiss
-import com.vibeisveryo.tournamentsim.util.OutWriter
-import java.io.IOException
-import java.time.Duration
-import java.time.Instant
-import java.util.*
-import java.util.concurrent.TimeUnit
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 object MeasureSwiss {
     fun measureCombinedDistortions(matchesStart: Int, teamsStart: Int, teamsStop: Int, iterations: Int, skillStyle: SkillStyle) {
@@ -94,6 +90,31 @@ object MeasureSwiss {
                     )
                 }
             }
+        }
+    }
+
+    fun measureDistortions(iterations: Int, teamsStart: Int, teamsStop: Int, skillStyle: SkillStyle) {
+        // Want new file for each team count
+        for (teamCount in teamsStart..teamsStop) {
+            println("Doing $teamCount matches now")
+            val matchesStop = (ceil(teamCount / 2.0) * 2 - 3).toInt()
+            val matchRange = 1..matchesStop
+            measureIterative(iterations, "distortions_swiss_${teamCount}_teams", "matchCount",
+                *matchRange.map { "exp$it" }.toTypedArray(), *matchRange.map { "act$it" }.toTypedArray()) { outWriter ->
+                for (matchCount in matchRange) {
+                    val main = Division("Main", teamCount, skillStyle)
+                    Swiss.swissRunMatches(main, matchCount)
+                    val expMatchPointsMap = main.normalizedExpectedMatchPoints(matchCount)
+                    val expMatchPoints = main.teamArray().map { expMatchPointsMap[it]!! }
+                    val actMatchPoints = main.teamArray().map { it.matchPoints }
+                    outWriter.addRecord(
+                        matchCount,
+                        *expMatchPoints.map { String.format("%3.5f", it) }.toTypedArray(),
+                        *actMatchPoints.map { String.format("%d", it) }.toTypedArray()
+                    )
+                }
+            }
+
         }
     }
 
