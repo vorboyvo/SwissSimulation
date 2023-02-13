@@ -99,8 +99,9 @@ object MeasureSwiss {
             println("Doing $teamCount matches now")
             val matchesStop = (ceil(teamCount / 2.0) * 2 - 3).toInt()
             val matchRange = 1..matchesStop
+            val teamRange = 1..teamCount
             measureIterative(iterations, "distortions_swiss_${teamCount}_teams", "matchCount",
-                *matchRange.map { "exp$it" }.toTypedArray(), *matchRange.map { "act$it" }.toTypedArray()) { outWriter ->
+                *teamRange.map { "exp$it" }.toTypedArray(), *teamRange.map { "act$it" }.toTypedArray()) { outWriter ->
                 for (matchCount in matchRange) {
                     val main = Division("Main", teamCount, skillStyle)
                     Swiss.swissRunMatches(main, matchCount)
