@@ -16,12 +16,18 @@
  */
 package com.vibeisveryo.tournamentsim
 
-import com.vibeisveryo.tournamentsim.measurement.MeasureSwiss
-import com.vibeisveryo.tournamentsim.simulation.Division
-
 object Main {
     @JvmStatic
     fun main(vararg args: String) {
-        MeasureSwiss.measureDistortions(5000, 10, 36, Division.SkillStyle.TRUE_RANDOM)
+        //MeasureSwiss.measureDistortions(5000, 10, 36, Division.SkillStyle.TRUE_RANDOM)
+        fun <T> MutableList<T>.rotateLeft(places: Int) {
+            val temp = this.drop(places) + this.take(places)
+            for (j in 0 until this.size) {
+                this[j] = temp[j]
+            }
+        }
+        val hiii = mutableListOf("a", "b", "c", "d", "e", "f", "g")
+        hiii.rotateLeft(2)
+        println(hiii)
     }
 }

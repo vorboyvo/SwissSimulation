@@ -18,48 +18,49 @@ package com.vibeisveryo.tournamentsim.benchmarking
 
 import com.vibeisveryo.tournamentsim.simulation.Division
 import com.vibeisveryo.tournamentsim.tournament.Swiss
-import java.time.Duration
-import java.time.Instant
-import java.util.*
 import kotlin.math.ceil
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.system.measureTimeMillis
+import kotlin.time.ExperimentalTime
 
 object Benchmark {
-    val skillStyle = Division.SkillStyle.TRUE_RANDOM
+    private val skillStyle = Division.SkillStyle.TRUE_RANDOM
 
+    @OptIn(ExperimentalTime::class)
     @JvmStatic
     fun benchSwissMatches(iters: Int, maxTeams: Int) {
         var teamCount = 10
         while (teamCount <= maxTeams) {
-            val start = Instant.now()
             val matchCount = ceil(teamCount / 2.0).toInt() * 2 - 3
-            for (i in 0 until iters) {
-                val divMain = Division("Main", teamCount, skillStyle)
-                Swiss.swissRunMatches(divMain, matchCount)
+            val elapsed = measureTimeMillis {
+                for (i in 0 until iters) {
+                    val divMain = Division("Main", teamCount, skillStyle)
+                    Swiss.swissRunMatches(divMain, matchCount)
+                }
             }
-            val end = Instant.now()
             System.out.printf(
                 "%d teams and %d matches took %d milliseconds\n", teamCount, matchCount,
-                Duration.between(start, end).toMillis()
+                elapsed
             )
             teamCount += 2
         }
     }
 
+    @OptIn(ExperimentalTime::class)
     fun benchRandomMatches(iters: Int, maxTeams: Int) {
         var teamCount = 10
         while (teamCount <= maxTeams) {
-            val start = Instant.now()
             val matchCount = ceil(teamCount / 2.0).toInt() * 2 - 3
-            for (i in 0 until iters) {
-                val divMain = Division("Main", teamCount, skillStyle)
-                Swiss.randomRunMatches(divMain, matchCount)
+            val elapsed = measureTimeMillis {
+                for (i in 0 until iters) {
+                    val divMain = Division("Main", teamCount, skillStyle)
+                    Swiss.randomRunMatches(divMain, matchCount)
+                }
             }
-            val end = Instant.now()
             System.out.printf(
                 "%d teams and %d matches took %d milliseconds\n", teamCount, matchCount,
-                Duration.between(start, end).toMillis()
+                elapsed
             )
             teamCount += 2
         }
@@ -67,16 +68,15 @@ object Benchmark {
 
     @JvmStatic
     fun benchSeason(iters: Int, teamCount: Int, matchCount: Int) {
-        val durations = IntArray(iters)
+        val durations = LongArray(iters)
         for (i in 0 until iters) {
-            val start = Instant.now()
-            val main = Division("Main", teamCount, skillStyle)
-            Swiss.swissRunMatches(main, matchCount)
-            val stop = Instant.now()
-            durations[i] = Duration.between(start, stop).toMillis().toInt()
+            durations[i] = measureTimeMillis {
+                val main = Division("Main", teamCount, skillStyle)
+                Swiss.swissRunMatches(main, matchCount)
+            }
         }
-        var min = Int.MAX_VALUE
-        var max = 0
+        var min = Long.MAX_VALUE
+        var max = 0L
         var mean = 0.0
         var vari = 0.0
         for (i in 0 until iters) {
@@ -90,7 +90,7 @@ object Benchmark {
         }
         vari /= iters.toDouble()
         val stdev: Double = sqrt(vari)
-        Arrays.sort(durations)
+        durations.sort()
         val median: Double = if (iters % 2 == 0) {
             (durations[iters / 2 - 1] + durations[iters / 2]) / 2.0
         } else {

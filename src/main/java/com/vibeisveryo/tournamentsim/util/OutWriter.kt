@@ -25,7 +25,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class OutWriter(title: String, vararg headerValues: String) {
-    var outputWriter: FileWriter
+    private var outputWriter: FileWriter
     private var csvPrinter: CSVPrinter
     private var unsaved: MutableList<Any?>
     private var open: Boolean
