@@ -27,8 +27,6 @@ import kotlin.time.ExperimentalTime
 object Benchmark {
     private val skillStyle = Division.SkillStyle.TRUE_RANDOM
 
-    @OptIn(ExperimentalTime::class)
-    @JvmStatic
     fun benchSwissMatches(iters: Int, maxTeams: Int) {
         var teamCount = 10
         while (teamCount <= maxTeams) {
@@ -47,7 +45,6 @@ object Benchmark {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     fun benchRandomMatches(iters: Int, maxTeams: Int) {
         var teamCount = 10
         while (teamCount <= maxTeams) {
@@ -66,7 +63,6 @@ object Benchmark {
         }
     }
 
-    @JvmStatic
     fun benchSeason(iters: Int, teamCount: Int, matchCount: Int) {
         val durations = LongArray(iters)
         for (i in 0 until iters) {
