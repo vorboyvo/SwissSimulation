@@ -168,7 +168,7 @@ object Swiss {
      * @return List of pairs of Team for that week's matches, where the pair's index 0 is home and 1 is away.
      */
     @JvmStatic fun scheduleWeek(div: Division): List<Array<Team>> {
-        // Assume team list is sorted. Otherwise, we have other issues going on.
+        // Assume team list is sorted, by contract
         val scheduleUnpacked = dfsFindSchedule(LinkedList(), div.teamArray(),true, 0)
             ?: throw NullPointerException("Could not find a valid set of matches!")
         // Pack schedule into list of pairs (odd-even pairs)

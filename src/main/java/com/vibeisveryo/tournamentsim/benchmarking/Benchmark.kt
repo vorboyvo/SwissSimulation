@@ -26,8 +26,12 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 object Benchmark {
-    val skillStyle = Division.SkillStyle.TRUE_RANDOM
+    private val skillStyle = Division.SkillStyle.TRUE_RANDOM
 
+    /**
+     * Benchmarks how much time it takes to run Swiss matches, over a number of teams and a number of matches.
+     * Used for optimization purposes; typically not of any use to the user.
+     */
     @JvmStatic
     fun benchSwissMatches(iters: Int, maxTeams: Int) {
         var teamCount = 10
@@ -47,6 +51,10 @@ object Benchmark {
         }
     }
 
+    /**
+     * Benchmarks how much time it takes to run Random matches, over a number of teams and a number of matches.
+     * Used for optimization purposes; typically not of any use to the user.
+     */
     fun benchRandomMatches(iters: Int, maxTeams: Int) {
         var teamCount = 10
         while (teamCount <= maxTeams) {
@@ -65,6 +73,10 @@ object Benchmark {
         }
     }
 
+    /**
+     * Benchmarks how long it takes to run a season, with summary statistics.
+     * Used for optimization purposes; typically not of any use to the user.
+     */
     @JvmStatic
     fun benchSeason(iters: Int, teamCount: Int, matchCount: Int) {
         val durations = IntArray(iters)

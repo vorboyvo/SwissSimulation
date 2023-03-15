@@ -140,6 +140,10 @@ class Division {
         return returned.toString()
     }
 
+    /**
+     * Get a vector of teams' ranks by skill, in order with their league table rank.
+     * @return a vector, in call-time
+     */
     fun teamSkillRanks(): List<Int> {
         return this.teamList.stream().map { team: Team? ->
             val teams: MutableList<Team> = ArrayList(this.teamList)
