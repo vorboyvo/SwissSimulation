@@ -18,7 +18,6 @@ package com.vibeisveryo.tournamentsim.tournament
 
 import com.vibeisveryo.tournamentsim.simulation.Division
 import com.vibeisveryo.tournamentsim.simulation.Team
-import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 
@@ -49,7 +48,14 @@ object RoundRobin {
                     )
                 )
             }
-            Collections.rotate(rotatingTeams, -1)
+            // Rotate array
+            fun <T> MutableList<T>.rotateLeft(places: Int) {
+                val temp = this.drop(places) + this.take(places)
+                for (j in 0 until this.size) {
+                    this[j] = temp[j]
+                }
+            }
+            rotatingTeams.rotateLeft(1)
             weekList.add(week)
         }
 

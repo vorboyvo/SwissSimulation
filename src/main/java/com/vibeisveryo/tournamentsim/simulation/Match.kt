@@ -17,10 +17,9 @@
 package com.vibeisveryo.tournamentsim.simulation
 
 import com.vibeisveryo.tournamentsim.util.ArrayMatch
-import java.lang.IllegalArgumentException
-import java.util.*
 import kotlin.math.exp
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 object Match {
     private const val ODDS_SCALING_FACTOR = 2

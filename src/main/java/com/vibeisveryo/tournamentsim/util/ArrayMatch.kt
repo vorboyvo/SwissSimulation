@@ -9,7 +9,7 @@ object ArrayMatch {
      * @param array array to be searched within for the closest match
      * @return value of the closest match
      */
-    @JvmStatic fun findClosestArrayMatch(value: Double, array: Array<Double>): Double {
+    fun findClosestArrayMatch(value: Double, array: Array<Double>): Double {
         var match = array[0]
         for (i in 1 until array.size) {
             if (abs(value-array[i]) < abs(value-match)) {

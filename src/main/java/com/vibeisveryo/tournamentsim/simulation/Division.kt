@@ -17,11 +17,9 @@
 package com.vibeisveryo.tournamentsim.simulation
 
 import com.vibeisveryo.tournamentsim.simulation.Match.match
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.random.Random
 
 /**
  * Represents a division, which is a group of teams within which matches occur.
@@ -33,7 +31,7 @@ class Division {
     }
 
     enum class SkillStyle {
-        IDENTICAL, UNIFORM, RANDOM_NORMAL, TRUE_RANDOM
+        IDENTICAL, UNIFORM, TRUE_RANDOM
     }
 
     private val name: String
@@ -47,7 +45,7 @@ class Division {
         this.name = name
         this.teamList = ArrayList()
         this.verbosityLevel = VerbosityLevel.NONE
-        this.random = Random()
+        this.random = Random.Default
         generateTeams(noOfTeams, skillStyle)
     }
 
@@ -63,7 +61,7 @@ class Division {
         this.name = name
         this.teamList = ArrayList(teamList)
         this.verbosityLevel = VerbosityLevel.NONE
-        this.random = Random()
+        this.random = Random.Default
     }
 
     constructor(name: String, teamList: List<Team>, seed: Long) {
@@ -92,7 +90,8 @@ class Division {
      * Sorts this Division's teamList by the natural ordering of the Teams within.
      */
     fun sort() {
-        this.teamList.sortWith(Collections.reverseOrder())
+        this.teamList.sort()
+        this.teamList.asReversed()
     }
 
     /**
@@ -145,12 +144,13 @@ class Division {
      * @return a vector, in call-time
      */
     fun teamSkillRanks(): List<Int> {
-        return this.teamList.stream().map { team: Team? ->
+        return this.teamList.map { team: Team? ->
             val teams: MutableList<Team> = ArrayList(this.teamList)
-            teams.sortWith(Collections.reverseOrder { o1: Team, o2: Team ->
+            teams.sortWith { o1: Team, o2: Team ->
                 val diff = o1.skill - o2.skill
                 (if (diff >= 0) ceil(diff) else floor(diff)).toInt()
-            })
+            }
+            teams.asReversed()
             teams.indexOf(team)
         }.toList()
     }
@@ -205,12 +205,6 @@ class Division {
                     teamList.add(Team("Team $i", skill))
                 }
                 // Skill style 2: Skills generated according to normal distribution
-            }
-            SkillStyle.RANDOM_NORMAL -> {
-                for (i in 0 until noOfTeams) {
-                    val skill = random.nextGaussian()
-                    teamList.add(Team("Team $i", skill))
-                }
             }
             SkillStyle.TRUE_RANDOM -> {
                 for (i in 0 until noOfTeams) {

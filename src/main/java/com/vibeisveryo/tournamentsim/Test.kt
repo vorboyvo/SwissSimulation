@@ -93,7 +93,7 @@ object Test {
             teamList[11], teamList[13]
         ).addMatchPlayed(teamList[11], teamList[14]).addMatchPlayed(teamList[14], teamList[15])
         println(
-            Swiss.scheduleWeek(main).stream()
+            Swiss.scheduleWeek(main)
                 .map { a: Array<Team>? ->
                     Arrays.deepToString(Arrays.stream(a).map { b: Team -> b.name }
                         .toArray())
